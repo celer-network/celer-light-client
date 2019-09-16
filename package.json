@@ -1,0 +1,54 @@
+{
+  "name": "celer-light-client",
+  "version": "0.15.0",
+  "description": "Celer Light Client",
+  "main": "dist/index.js",
+  "repository": "https://github.com/celer-network/celer-light-client",
+  "author": {
+    "name": "Michael Zhou",
+    "email": "zhoumotongxue008@gmail.com"
+  },
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf browser dist tsout demoout",
+    "compile": "npx tsc -p .",
+    "bundle:browser": "npx parcel build -d browser --out-file browser.js --global celer src/index.ts",
+    "bundle:node": "npx parcel build --target node src/index.ts",
+    "build": "yarn run compile && yarn run bundle:browser && yarn run bundle:node",
+    "docs": "npx typedoc --name \"Celer Light Client API Docs\" --out docs --excludePrivate --disableOutputCheck --theme node_modules/typedoc-thunder-theme/bin/default src",
+    "demo": "yarn run build && npx parcel serve -d demoout demo/index.html",
+    "watch": "npx parcel watch demo/index.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "browser": "browser/browser.js",
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Opera versions",
+    "last 2 Edge versions"
+  ],
+  "types": "dist/index.d.ts",
+  "devDependencies": {
+    "parcel-bundler": "^1.12.3",
+    "typedoc": "^0.15.0",
+    "typedoc-thunder-theme": "^0.0.2",
+    "typescript": "^3.6.2"
+  },
+  "dependencies": {
+    "@improbable-eng/grpc-web": "^0.11.0",
+    "@improbable-eng/grpc-web-node-http-transport": "^0.11.0",
+    "@types/detect-node": "^2.0.0",
+    "@types/google-protobuf": "^3.7.1",
+    "detect-node": "^2.0.4",
+    "dexie": "^2.0.4",
+    "ethers": "^4.0.36",
+    "google-protobuf": "^3.9.1",
+    "ts-protoc-gen": "^0.11.0"
+  },
+  "files": [
+    "browser",
+    "dist",
+    "README.md"
+  ]
+}
