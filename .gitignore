@@ -6,4 +6,4 @@
 /tsout/
 node_modules/
 .vscode/*
-celer-light-client-sdk-*.tgz
+celer-light-client-*.tgz
