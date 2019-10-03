@@ -25,12 +25,12 @@
 
 import { ethers } from 'ethers';
 
-import { CustomSigner } from '../crypto/custom_signer';
-import { ConditionType } from '../protobufs/entity_pb';
-import { CelerMsg, PaymentSettleReason } from '../protobufs/message_pb';
-import { Database } from '../storage/database';
-import * as utils from '../utils/types';
-import { PaymentSettleRequestSender } from './payment_settle_request_sender';
+import { CustomSigner } from '../../crypto/custom_signer';
+import { Database } from '../../data/database';
+import { ConditionType } from '../../protobufs/entity_pb';
+import { CelerMsg, PaymentSettleReason } from '../../protobufs/message_pb';
+import * as typeUtils from '../../utils/types';
+import { PaymentSettleRequestSender } from '../senders/payment_settle_request_sender';
 
 export class RevealSecretAckHandler {
   private readonly db: Database;
@@ -70,7 +70,7 @@ export class RevealSecretAckHandler {
     }
     if (
       !CustomSigner.isSignatureValid(
-        utils.bytesToAddress(conditionalPay.getDest_asU8()),
+        typeUtils.bytesToAddress(conditionalPay.getDest_asU8()),
         hashLock.secret,
         ethers.utils.splitSignature(signatureBytes)
       )

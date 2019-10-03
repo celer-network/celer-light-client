@@ -28,7 +28,6 @@ import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { grpc } from '@improbable-eng/grpc-web';
 
 import { Config } from '../config';
-import { Signer } from '../crypto/signer';
 import {
   AuthReq,
   CelerMsg,
@@ -36,13 +35,6 @@ import {
   OpenChannelResponse
 } from '../protobufs/message_pb';
 import { WebProxyRpcClient } from '../protobufs/web_proxy_pb_service';
-import { Database } from '../storage/database';
-import { CondPayReceiptHandler } from './cond_pay_receipt_handler';
-import { CondPayRequestHandler } from './cond_pay_request_handler';
-import { CondPayResponseHandler } from './cond_pay_response_handler';
-import { PaymentSettleRequestSender } from './payment_settle_request_sender';
-import { PaymentSettleResponseHandler } from './payment_settle_response_handler';
-import { RevealSecretAckHandler } from './reveal_secret_ack_handler';
 
 interface MessageHandler {
   handle: (message: CelerMsg) => Promise<void>;
@@ -53,40 +45,9 @@ export class MessageManager {
   private readonly handlers: Map<CelerMsg.MessageCase, MessageHandler>;
   private metadata: grpc.Metadata;
 
-  constructor(
-    config: Config,
-    peerAddress: string,
-    db: Database,
-    signer: Signer
-  ) {
+  constructor(config: Config) {
     this.rpcClient = new WebProxyRpcClient(config.ospNetworkAddress);
     this.handlers = new Map();
-    this.handlers.set(
-      CelerMsg.MessageCase.COND_PAY_REQUEST,
-      new CondPayRequestHandler(db, this, signer, config)
-    );
-    this.handlers.set(
-      CelerMsg.MessageCase.COND_PAY_RESPONSE,
-      new CondPayResponseHandler(db, peerAddress)
-    );
-    this.handlers.set(
-      CelerMsg.MessageCase.COND_PAY_RECEIPT,
-      new CondPayReceiptHandler(db, this)
-    );
-    const paymentSettleRequestSender = new PaymentSettleRequestSender(
-      db,
-      signer,
-      this,
-      peerAddress
-    );
-    this.handlers.set(
-      CelerMsg.MessageCase.REVEAL_SECRET_ACK,
-      new RevealSecretAckHandler(db, paymentSettleRequestSender)
-    );
-    this.handlers.set(
-      CelerMsg.MessageCase.PAYMENT_SETTLE_RESPONSE,
-      new PaymentSettleResponseHandler(db, peerAddress)
-    );
   }
 
   async createSession(): Promise<void> {
@@ -105,6 +66,7 @@ export class MessageManager {
   }
 
   async openChannel(request: OpenChannelRequest): Promise<OpenChannelResponse> {
+    // TODO(dominator008): Maybe merge OpenChannel into CelerMsg
     return await new Promise<OpenChannelResponse>((resolve, reject) => {
       this.rpcClient.openChannel(request, this.metadata, (error, response) => {
         if (error) {
@@ -133,5 +95,9 @@ export class MessageManager {
     stream.on('data', async (message: CelerMsg) => {
       await this.handlers.get(message.getMessageCase()).handle(message);
     });
+  }
+
+  setHandler(messageCase: CelerMsg.MessageCase, handler: MessageHandler): void {
+    this.handlers.set(messageCase, handler);
   }
 }

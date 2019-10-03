@@ -23,11 +23,13 @@
  * IN THE SOFTWARE.
  */
 
+import { Database } from '../data/database';
 import { TokenInfo } from '../protobufs/entity_pb';
-import { Database } from '../storage/database';
 
 export class CooperativeWithdrawProcessor {
   private readonly db: Database;
+
+  // TODO(dominator008): Implement this
   constructor() {}
 
   async cooperativeWithdraw(

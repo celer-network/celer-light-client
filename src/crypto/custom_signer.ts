@@ -39,10 +39,9 @@ export class CustomSigner {
     return CustomSigner.joinSignature(ethers.utils.splitSignature(signature));
   }
 
-  /**
-   * Hack to use v: 00/01 until goCeler accepts 27/28
-   */
   private static joinSignature(signature: ethers.utils.Signature): string {
+    // Hack to use v: 00/01
+    // TODO(dominator008): Remove once OSP accepts 27/28
     signature = ethers.utils.splitSignature(signature);
     return ethers.utils.hexlify(
       ethers.utils.concat([

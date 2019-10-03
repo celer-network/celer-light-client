@@ -30,7 +30,7 @@ import { TokenInfo, TokenTypeMap } from '../protobufs/entity_pb';
 export function isHexAddress(address: string): boolean {
   try {
     ethers.utils.getAddress(address);
-  } catch (e) {
+  } catch (_) {
     return false;
   }
   return true;
@@ -40,7 +40,7 @@ export function bytesToAddress(bytes: Uint8Array): string {
   return ethers.utils.getAddress(ethers.utils.hexlify(bytes));
 }
 
-export function getTokenInfo(
+export function createTokenInfo(
   tokenType: TokenTypeMap[keyof TokenTypeMap],
   tokenAddress: string
 ) {

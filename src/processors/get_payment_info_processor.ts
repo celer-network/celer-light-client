@@ -26,7 +26,7 @@
 import { ethers } from 'ethers';
 
 import { PaymentInfo } from '../api/payment_info';
-import { Database } from '../storage/database';
+import { Database } from '../data/database';
 import * as errorUtils from '../utils/errors';
 import * as typeUtils from '../utils/types';
 

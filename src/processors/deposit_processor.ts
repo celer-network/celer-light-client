@@ -33,8 +33,8 @@ import { BigNumber, LogDescription } from 'ethers/utils';
 
 import celerLedgerAbi from '../abi/celer_ledger.json';
 import { Config } from '../config';
+import { Database } from '../data/database';
 import { TokenInfo, TokenType } from '../protobufs/entity_pb';
-import { Database } from '../storage/database';
 import * as errorUtils from '../utils/errors';
 
 export class DepositProcessor {

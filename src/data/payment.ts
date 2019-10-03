@@ -23,6 +23,7 @@
  * IN THE SOFTWARE.
  */
 
+import { ethers } from 'ethers';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 
 import { ConditionalPay } from '../protobufs/entity_pb';
@@ -51,16 +52,18 @@ export class Payment {
   constructor(
     paymentId: string,
     conditionalPay: ConditionalPay,
-    note: Any,
     incomingChannelId: string,
-    outgoingChannelId: string
+    outgoingChannelId: string,
+    note?: Any
   ) {
     this.paymentId = paymentId;
     this.setConditionalPay(conditionalPay);
     this.status = PaymentStatus.INITIAL;
-    this.note = note.serializeBinary();
     this.incomingChannelId = incomingChannelId;
     this.outgoingChannelId = outgoingChannelId;
+    if (note) {
+      this.note = note.serializeBinary();
+    }
   }
 
   getConditionalPay(): ConditionalPay {
@@ -73,5 +76,26 @@ export class Payment {
 
   getNote(): Any {
     return Any.deserializeBinary(this.note);
+  }
+
+  static calculatePaymentId(payment: ConditionalPay): string {
+    const paymentBytes = payment.serializeBinary();
+    const paymentHash = ethers.utils.arrayify(
+      ethers.utils.keccak256(paymentBytes)
+    );
+    const resolver = payment.getPayResolver_asU8();
+    const packed = new Uint8Array(paymentHash.length + resolver.length);
+    packed.set(paymentHash);
+    packed.set(resolver, paymentHash.length);
+    return ethers.utils.keccak256(packed);
+  }
+
+  static getListDifferences(
+    a: Array<string | Uint8Array>,
+    b: Array<string | Uint8Array>
+  ) {
+    const onlyInA = a.filter(x => !b.includes(x));
+    const onlyInB = b.filter(x => !a.includes(x));
+    return [onlyInA, onlyInB];
   }
 }

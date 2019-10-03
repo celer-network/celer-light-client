@@ -25,23 +25,23 @@
 
 import { ethers } from 'ethers';
 
-import { Signer } from '../crypto/signer';
-import { SimplexPaymentChannel } from '../protobufs/entity_pb';
+import { CustomSigner } from '../../crypto/custom_signer';
+import { Database } from '../../data/database';
+import { Payment, PaymentStatus } from '../../data/payment';
+import {
+  PaymentChannel,
+  PaymentChannelStatus
+} from '../../data/payment_channel';
+import { SimplexPaymentChannel } from '../../protobufs/entity_pb';
 import {
   CelerMsg,
   PaymentSettleReasonMap,
   PaymentSettleRequest,
   SettledPayment,
   SignedSimplexState
-} from '../protobufs/message_pb';
-import { Database } from '../storage/database';
-import { Payment, PaymentStatus } from '../storage/payment';
-import {
-  PaymentChannel,
-  PaymentChannelStatus
-} from '../storage/payment_channel';
-import * as errorUtils from '../utils/errors';
-import { MessageManager } from './message_manager';
+} from '../../protobufs/message_pb';
+import * as errorUtils from '../../utils/errors';
+import { MessageManager } from '../message_manager';
 
 export interface PaymentSettlementInfo {
   readonly payment: Payment;
@@ -51,13 +51,13 @@ export interface PaymentSettlementInfo {
 
 export class PaymentSettleRequestSender {
   private readonly db: Database;
-  private readonly signer: Signer;
+  private readonly signer: CustomSigner;
   private readonly messageManager: MessageManager;
   private readonly peerAddress: string;
 
   constructor(
     db: Database,
-    signer: Signer,
+    signer: CustomSigner,
     messageManager: MessageManager,
     peerAddress: string
   ) {

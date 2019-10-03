@@ -34,6 +34,9 @@ import { BigNumber, LogDescription } from 'ethers/utils';
 import celerLedgerAbi from '../abi/celer_ledger.json';
 import { Config } from '../config';
 import { CustomSigner } from '../crypto/custom_signer';
+import { Database } from '../data/database';
+import { DepositWithdrawal } from '../data/deposit_withdrawal';
+import { PaymentChannel } from '../data/payment_channel';
 import { MessageManager } from '../messaging/message_manager';
 import { OpenChannelRequest as OnChainOpenChannelRequest } from '../protobufs/chain_pb';
 import {
@@ -53,9 +56,6 @@ import {
   OpenChannelResponse,
   SignedSimplexState
 } from '../protobufs/message_pb';
-import { Database } from '../storage/database';
-import { DepositWithdrawal } from '../storage/deposit_withdrawal';
-import { PaymentChannel } from '../storage/payment_channel';
 
 export class OpenChannelProcessor {
   private readonly db: Database;

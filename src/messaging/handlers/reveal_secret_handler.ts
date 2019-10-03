@@ -25,14 +25,14 @@
 
 import { ethers } from 'ethers';
 
-import { CustomSigner } from '../crypto/custom_signer';
-import { ConditionType } from '../protobufs/entity_pb';
-import { CelerMsg, RevealSecretAck } from '../protobufs/message_pb';
-import { Database } from '../storage/database';
-import { HashLock } from '../storage/hash_lock';
-import { PaymentStatus } from '../storage/payment';
-import * as typeUtils from '../utils/types';
-import { MessageManager } from './message_manager';
+import { CustomSigner } from '../../crypto/custom_signer';
+import { Database } from '../../data/database';
+import { HashLock } from '../../data/hash_lock';
+import { PaymentStatus } from '../../data/payment';
+import { ConditionType } from '../../protobufs/entity_pb';
+import { CelerMsg, RevealSecretAck } from '../../protobufs/message_pb';
+import * as typeUtils from '../../utils/types';
+import { MessageManager } from '../message_manager';
 
 export class RevealSecretHandler {
   private readonly db: Database;
@@ -49,8 +49,8 @@ export class RevealSecretHandler {
     this.signer = signer;
   }
 
-  async handle(incomingMessage: CelerMsg): Promise<void> {
-    const revealSecret = incomingMessage.getRevealSecret();
+  async handle(revealSecretMessage: CelerMsg): Promise<void> {
+    const revealSecret = revealSecretMessage.getRevealSecret();
     const secret = revealSecret.getSecret_asU8();
     const paymentIdBytes = revealSecret.getPayId_asU8();
     const paymentId = ethers.utils.hexlify(paymentIdBytes);
@@ -82,10 +82,10 @@ export class RevealSecretHandler {
     const revealSecretAck = new RevealSecretAck();
     revealSecretAck.setPayId(paymentIdBytes);
     revealSecretAck.setPayDestSecretSig(signature);
-    const outgoingMessage = new CelerMsg();
-    outgoingMessage.setToAddr(conditionalPay.getSrc_asU8());
-    outgoingMessage.setRevealSecretAck(revealSecretAck);
-    await this.messageManager.sendMessage(outgoingMessage);
+    const revealSecretAckMessage = new CelerMsg();
+    revealSecretAckMessage.setToAddr(conditionalPay.getSrc_asU8());
+    revealSecretAckMessage.setRevealSecretAck(revealSecretAck);
+    await this.messageManager.sendMessage(revealSecretAckMessage);
 
     payment.status = PaymentStatus.HASH_LOCK_REVEALED;
     await this.db.payments.put(payment);

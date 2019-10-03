@@ -2,7 +2,7 @@
  * @license
  * The MIT License
  *
- * Copyright (c) 2019 Celer Network
+ * Copyright (c) 2019 ScaleSphere Foundation LTD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,37 +23,37 @@
  * IN THE SOFTWARE.
  */
 
-import { CelerMsg, ErrCode } from '../protobufs/message_pb';
-import { Database } from '../storage/database';
-import { PaymentChannel } from '../storage/payment_channel';
+import { ethers } from 'ethers';
 
-export class PaymentSettleResponseHandler {
-  private readonly db: Database;
-  private readonly peerAddress: string;
+import { Condition, ConditionType } from '../protobufs/entity_pb';
+import { Database } from './database';
 
-  constructor(db: Database, peerAddress: string) {
-    this.db = db;
-    this.peerAddress = peerAddress;
+export class HashLock {
+  readonly secret: Uint8Array;
+  readonly hash: string;
+  constructor(secret: Uint8Array, hash: string) {
+    this.secret = secret;
+    this.hash = hash;
   }
 
-  async handle(message: CelerMsg): Promise<void> {
-    const response = message.getCondPayResponse();
-    if (response.hasError()) {
-      switch (response.getError().getCode()) {
-        case ErrCode.INVALID_SEQ_NUM:
-          await PaymentChannel.storeCosignedSimplexState(
-            response.getStateCosigned(),
-            this.db,
-            this.peerAddress
-          );
-        default:
-      }
+  static async generateHashLockCondition(db: Database): Promise<Condition> {
+    const secret = ethers.utils.randomBytes(32);
+    const hash = ethers.utils.keccak256(secret);
+    const hashLockCondition = new Condition();
+    hashLockCondition.setConditionType(ConditionType.HASH_LOCK);
+    hashLockCondition.setHashLock(ethers.utils.arrayify(hash));
+    await db.hashLocks.add(new HashLock(secret, hash));
+    return hashLockCondition;
+  }
+
+  static async removeHashLockCondition(
+    db: Database,
+    condition: Condition
+  ): Promise<void> {
+    if (condition.getConditionType() !== ConditionType.HASH_LOCK) {
       return;
     }
-    await PaymentChannel.storeCosignedSimplexState(
-      response.getStateCosigned(),
-      this.db,
-      this.peerAddress
-    );
+    const hash = ethers.utils.hexlify(condition.getHashLock_asU8());
+    await db.hashLocks.delete(hash);
   }
 }

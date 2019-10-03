@@ -25,12 +25,12 @@
 
 import { ethers } from 'ethers';
 
-import { CustomSigner } from '../crypto/custom_signer';
-import { ConditionType } from '../protobufs/entity_pb';
-import { CelerMsg, RevealSecret } from '../protobufs/message_pb';
-import { Database } from '../storage/database';
-import * as utils from '../utils/types';
-import { MessageManager } from './message_manager';
+import { CustomSigner } from '../../crypto/custom_signer';
+import { Database } from '../../data/database';
+import { ConditionType } from '../../protobufs/entity_pb';
+import { CelerMsg, RevealSecret } from '../../protobufs/message_pb';
+import * as typeUtils from '../../utils/types';
+import { MessageManager } from '../message_manager';
 
 export class CondPayReceiptHandler {
   private readonly db: Database;
@@ -41,8 +41,8 @@ export class CondPayReceiptHandler {
     this.messageManager = messageManager;
   }
 
-  async handle(incomingMessage: CelerMsg): Promise<void> {
-    const receipt = incomingMessage.getCondPayReceipt();
+  async handle(receiptMessage: CelerMsg): Promise<void> {
+    const receipt = receiptMessage.getCondPayReceipt();
     const paymentIdBytes = receipt.getPayId_asU8();
     const paymentId = ethers.utils.hexlify(paymentIdBytes);
     const db = this.db;
@@ -52,7 +52,7 @@ export class CondPayReceiptHandler {
     }
     const conditionalPay = payment.getConditionalPay();
     const destinationBytes = conditionalPay.getDest_asU8();
-    const destination = utils.bytesToAddress(destinationBytes);
+    const destination = typeUtils.bytesToAddress(destinationBytes);
     if (
       !CustomSigner.isSignatureValid(
         destination,
@@ -69,13 +69,13 @@ export class CondPayReceiptHandler {
         if (!hashLock) {
           return;
         }
-        const revealSecretMessage = new RevealSecret();
-        revealSecretMessage.setPayId(paymentIdBytes);
-        revealSecretMessage.setSecret(hashLock.secret);
-        const outgoingMessage = new CelerMsg();
-        outgoingMessage.setToAddr(destinationBytes);
-        outgoingMessage.setRevealSecret(revealSecretMessage);
-        await this.messageManager.sendMessage(outgoingMessage);
+        const revealSecret = new RevealSecret();
+        revealSecret.setPayId(paymentIdBytes);
+        revealSecret.setSecret(hashLock.secret);
+        const revealSecretMessage = new CelerMsg();
+        revealSecretMessage.setToAddr(destinationBytes);
+        revealSecretMessage.setRevealSecret(revealSecret);
+        await this.messageManager.sendMessage(revealSecretMessage);
       }
     }
   }

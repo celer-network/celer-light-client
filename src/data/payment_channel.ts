@@ -25,9 +25,10 @@
 
 import { ethers } from 'ethers';
 
-import { Signer } from '../crypto/signer';
+import { CustomSigner } from '../crypto/custom_signer';
 import { SimplexPaymentChannel, TokenTypeMap } from '../protobufs/entity_pb';
-import { SignedSimplexState } from '../protobufs/message_pb';
+import { ErrCode, SignedSimplexState } from '../protobufs/message_pb';
+import * as errorUtils from '../utils/errors';
 import { Balance } from './balance';
 import { Database } from './database';
 import { DepositWithdrawal } from './deposit_withdrawal';
@@ -154,7 +155,7 @@ export class PaymentChannel {
   }
 
   static async signUpdatedSimplexState(
-    signer: Signer,
+    signer: CustomSigner,
     signedSimplexState: SignedSimplexState,
     simplexState: SimplexPaymentChannel
   ): Promise<void> {
@@ -182,5 +183,114 @@ export class PaymentChannel {
       paymentChannel.setOutgoingSignedSimplexState(cosignedState);
       await db.paymentChannels.put(paymentChannel);
     });
+  }
+
+  static isSeqNumValid(
+    stored: number,
+    receivedBase: number,
+    receivedProposed: number
+  ): boolean {
+    return stored === receivedBase && receivedProposed > stored;
+  }
+
+  static async verifyChannelExistence(
+    db: Database,
+    receivedChannelId: string
+  ): Promise<{
+    readonly result: errorUtils.VerificationResult;
+    readonly channel?: PaymentChannel;
+    readonly storedSignedSimplexState?: SignedSimplexState;
+    readonly storedSimplexState?: SimplexPaymentChannel;
+  }> {
+    const channel = await db.paymentChannels.get(receivedChannelId);
+    if (!channel) {
+      return {
+        result: {
+          valid: false,
+          errReason: errorUtils.unknownChannel(receivedChannelId).message
+        }
+      };
+    }
+    const storedSignedSimplexState = channel.getIncomingSignedSimplexState();
+    const storedSimplexState = SimplexPaymentChannel.deserializeBinary(
+      storedSignedSimplexState.getSimplexState_asU8()
+    );
+    return {
+      result: { valid: true },
+      channel,
+      storedSignedSimplexState,
+      storedSimplexState
+    };
+  }
+
+  static deserializeSignedSimplexState(
+    signedSimplexState: SignedSimplexState
+  ): [SimplexPaymentChannel, Uint8Array] {
+    const simplexStateBytes = signedSimplexState.getSimplexState_asU8();
+    const simplexState = SimplexPaymentChannel.deserializeBinary(
+      simplexStateBytes
+    );
+    return [simplexState, simplexStateBytes];
+  }
+
+  static verifyCommonSimplexStates(
+    channel: PaymentChannel,
+    peerAddress: string,
+    receivedChannelId: string,
+    receivedBaseSeqNum: number,
+    receivedSignedSimplexState: SignedSimplexState,
+    receivedSimplexState: SimplexPaymentChannel,
+    receivedSimplexStateBytes: Uint8Array,
+    storedSimplexState: SimplexPaymentChannel
+  ): errorUtils.VerificationResult {
+    // Verify channel OPEN status
+    if (channel.status !== PaymentChannelStatus.OPEN) {
+      return {
+        valid: false,
+        errReason: errorUtils.paymentChannelNotOpen(receivedChannelId).message
+      };
+    }
+
+    // Verify peer signature
+    const peerSignature = ethers.utils.splitSignature(
+      receivedSignedSimplexState.getSigOfPeerFrom_asU8()
+    );
+    if (
+      !CustomSigner.isSignatureValid(
+        peerAddress,
+        receivedSimplexStateBytes,
+        peerSignature
+      )
+    ) {
+      return {
+        valid: false,
+        errCode: ErrCode.INVALID_SIG
+      };
+    }
+
+    // Verify peerFrom
+    if (
+      ethers.utils.hexlify(receivedSimplexState.getPeerFrom_asU8()) !==
+      ethers.utils.hexlify(storedSimplexState.getPeerFrom_asU8())
+    ) {
+      return {
+        valid: false,
+        errReason: 'Invalid peerFrom'
+      };
+    }
+
+    // Verify base sequence number and proposed sequence number
+    if (
+      !PaymentChannel.isSeqNumValid(
+        storedSimplexState.getSeqNum(),
+        receivedSimplexState.getSeqNum(),
+        receivedBaseSeqNum
+      )
+    ) {
+      return {
+        valid: false,
+        errCode: ErrCode.INVALID_SEQ_NUM
+      };
+    }
   }
 }

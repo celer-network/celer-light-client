@@ -24,7 +24,7 @@
  */
 
 import { BalanceInfo, PaymentChannelInfo } from '../api/payment_channel_info';
-import { Database } from '../storage/database';
+import { Database } from '../data/database';
 import * as errorUtils from '../utils/errors';
 
 export class GetPaymentChannelInfoProcessor {

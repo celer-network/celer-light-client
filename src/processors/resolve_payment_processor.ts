@@ -23,6 +23,45 @@
  * IN THE SOFTWARE.
  */
 
+import { ethers } from 'ethers';
+import { JsonRpcProvider } from 'ethers/providers';
+import { BigNumber } from 'ethers/utils';
+
+import payRegistryAbi from '../abi/pay_registry.json';
+import { Config } from '../config';
+
+export class OnChainPaymentInfo {
+  readonly amount: BigNumber;
+  readonly resolveDeadline: number;
+
+  constructor(amount: BigNumber, resolveDeadline: number) {
+    this.amount = amount;
+    this.resolveDeadline = resolveDeadline;
+  }
+}
+
 export class ResolvePaymentProcessor {
-  constructor() {}
+  private readonly provider: JsonRpcProvider;
+  private readonly config: Config;
+
+  constructor(provider: JsonRpcProvider, config: Config) {
+    this.provider = provider;
+    this.config = config;
+  }
+
+  async getOnChainPaymentInfo(paymentId: string): Promise<OnChainPaymentInfo> {
+    const payRegistry = new ethers.Contract(
+      this.config.payRegistryAddress,
+      String(payRegistryAbi),
+      this.provider
+    );
+    const [amount, resolveDeadline]: [
+      BigNumber,
+      BigNumber
+    ] = await payRegistry.payInfoMap(ethers.utils.arrayify(paymentId));
+    if (resolveDeadline.eq(0)) {
+      return undefined;
+    }
+    return new OnChainPaymentInfo(amount, resolveDeadline.toNumber());
+  }
 }

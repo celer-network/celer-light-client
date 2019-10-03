@@ -37,31 +37,42 @@ import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 
 import { Config } from '../config';
 import { CustomSigner } from '../crypto/custom_signer';
+import { Database } from '../data/database';
+import { HashLock } from '../data/hash_lock';
+import { CondPayReceiptHandler } from '../messaging/handlers/cond_pay_receipt_handler';
+import { CondPayRequestHandler } from '../messaging/handlers/cond_pay_request_handler';
+import { CondPayResponseHandler } from '../messaging/handlers/cond_pay_response_handler';
+import { PaymentSettleProofHandler } from '../messaging/handlers/payment_settle_proof_handler';
+import { PaymentSettleRequestHandler } from '../messaging/handlers/payment_settle_request_handler';
+import { PaymentSettleResponseHandler } from '../messaging/handlers/payment_settle_response_handler';
+import { RevealSecretAckHandler } from '../messaging/handlers/reveal_secret_ack_handler';
+import { RevealSecretHandler } from '../messaging/handlers/reveal_secret_handler';
 import { MessageManager } from '../messaging/message_manager';
+import { CondPayRequestSender } from '../messaging/senders/cond_pay_request_sender';
+import { PaymentSettleRequestSender } from '../messaging/senders/payment_settle_request_sender';
 import { ApproveErc20Processor } from '../processors/approve_erc20_processor';
 import { DepositProcessor } from '../processors/deposit_processor';
 import { GetPaymentChannelInfoProcessor } from '../processors/get_payment_channel_info_processor';
 import { GetPaymentInfoProcessor } from '../processors/get_payment_info_processor';
 import { OpenChannelProcessor } from '../processors/open_channel_processor';
+import { ResolvePaymentProcessor } from '../processors/resolve_payment_processor';
 import { SendPaymentProcessor } from '../processors/send_payment_processor';
 import {
   Condition,
-  TokenType,
   TokenTypeMap,
   TransferFunctionType,
   TransferFunctionTypeMap
 } from '../protobufs/entity_pb';
-import { AuthReq } from '../protobufs/message_pb';
-import { Database } from '../storage/database';
-import * as utils from '../utils/types';
+import { AuthReq, CelerMsg } from '../protobufs/message_pb';
+import * as typeUtils from '../utils/types';
 import { PaymentChannelInfo } from './payment_channel_info';
 import { PaymentInfo } from './payment_info';
 
 export class Celer {
-  private readonly config: Config;
-  private readonly provider: JsonRpcProvider;
-  private readonly signer: CustomSigner;
   private readonly db: Database;
+  private readonly signer: CustomSigner;
+  private readonly provider: JsonRpcProvider;
+  private readonly config: Config;
   private readonly peerAddress: string;
 
   private readonly messageManager: MessageManager;
@@ -69,26 +80,40 @@ export class Celer {
   private readonly openChannelProcessor: OpenChannelProcessor;
   private readonly depositProcessor: DepositProcessor;
   private readonly sendPaymentProcessor: SendPaymentProcessor;
+  private readonly resolvePaymentProcessor: ResolvePaymentProcessor;
   private readonly getPaymentChannelInfoProcessor: GetPaymentChannelInfoProcessor;
   private readonly getPaymentInfoProcessor: GetPaymentInfoProcessor;
 
-  private constructor(config: Config) {
+  private constructor(config: Config, provider?: JsonRpcProvider) {
     this.db = new Database();
     const db = this.db;
     this.config = config;
     if (isNode) {
       grpc.setDefaultTransport(NodeHttpTransport());
     }
-    this.peerAddress = ethers.utils.getAddress(config.ospEthAddress);
-    const provider = new JsonRpcProvider(config.ethJsonRpcUrl);
+    const peerAddress = ethers.utils.getAddress(config.ospEthAddress);
+    this.peerAddress = peerAddress;
+    if (!provider) {
+      provider = new JsonRpcProvider(config.ethJsonRpcUrl);
+    }
     this.provider = provider;
     const signer = new CustomSigner(provider);
     this.signer = signer;
-    this.messageManager = new MessageManager(
-      config,
-      this.peerAddress,
+    const messageManager = new MessageManager(config);
+    this.messageManager = messageManager;
+
+    const condPayRequestSender = new CondPayRequestSender(
       db,
-      signer
+      messageManager,
+      signer,
+      provider,
+      config
+    );
+    const paymentSettleRequestSender = new PaymentSettleRequestSender(
+      db,
+      signer,
+      messageManager,
+      peerAddress
     );
     this.openChannelProcessor = new OpenChannelProcessor(
       db,
@@ -97,10 +122,8 @@ export class Celer {
       provider,
       config
     );
-    this.sendPaymentProcessor = new SendPaymentProcessor(
-      db,
-      this.messageManager,
-      signer,
+    this.sendPaymentProcessor = new SendPaymentProcessor(condPayRequestSender);
+    this.resolvePaymentProcessor = new ResolvePaymentProcessor(
       provider,
       config
     );
@@ -108,15 +131,56 @@ export class Celer {
       db
     );
     this.getPaymentInfoProcessor = new GetPaymentInfoProcessor(db);
+
+    this.messageManager.setHandler(
+      CelerMsg.MessageCase.COND_PAY_REQUEST,
+      new CondPayRequestHandler(db, messageManager, signer, config)
+    );
+    this.messageManager.setHandler(
+      CelerMsg.MessageCase.COND_PAY_RESPONSE,
+      new CondPayResponseHandler(db, signer, peerAddress)
+    );
+    this.messageManager.setHandler(
+      CelerMsg.MessageCase.COND_PAY_RECEIPT,
+      new CondPayReceiptHandler(db, messageManager)
+    );
+    this.messageManager.setHandler(
+      CelerMsg.MessageCase.REVEAL_SECRET,
+      new RevealSecretHandler(db, messageManager, signer)
+    );
+    this.messageManager.setHandler(
+      CelerMsg.MessageCase.REVEAL_SECRET_ACK,
+      new RevealSecretAckHandler(db, paymentSettleRequestSender)
+    );
+    this.messageManager.setHandler(
+      CelerMsg.MessageCase.PAYMENT_SETTLE_REQUEST,
+      new PaymentSettleRequestHandler(db, messageManager, signer, config)
+    );
+    this.messageManager.setHandler(
+      CelerMsg.MessageCase.PAYMENT_SETTLE_RESPONSE,
+      new PaymentSettleResponseHandler(db, signer, peerAddress)
+    );
+    this.messageManager.setHandler(
+      CelerMsg.MessageCase.PAYMENT_SETTLE_PROOF,
+      new PaymentSettleProofHandler(
+        db,
+        paymentSettleRequestSender,
+        this.resolvePaymentProcessor
+      )
+    );
   }
 
   /**
    * Creates a Celer Light Client instance.
    *
-   * @param config - The configuration object
+   * @param config The configuration object
+   * @param provider An optional JsonRpcProvider
    */
-  static async create(config: Config): Promise<Celer> {
-    const client = new Celer(config);
+  static async create(
+    config: Config,
+    provider?: JsonRpcProvider
+  ): Promise<Celer> {
+    const client = new Celer(config, provider);
     await client.messageManager.createSession();
     const authRequest = new AuthReq();
     const selfAddressBytes = ethers.utils.arrayify(
@@ -141,141 +205,100 @@ export class Celer {
   /**
    * Approves the CelerLedger contract to spend an ERC-20 token.
    *
-   * @param tokenAddress - The token address
+   * @param tokenAddress The token address
    */
   approveErc20(tokenAddress: string) {
     return this.approveErc20Processor.approveIfNecessary(tokenAddress);
   }
 
   /**
-   * Opens an ETH channel.
+   * Opens a payment channel.
    *
-   * @param amount - The amount to be deposited into the channel, in wei
-   * @param peerAmount - The amount to be deposited into the channel by the
+   * @param tokenType The token type, currently supporting ETH and ERC20
+   * @param tokenAddress The token address
+   * @param amount The amount to be deposited into the channel, in wei
+   * @param peerAmount The amount to be deposited into the channel by the
    *     counterparty, in wei
    * @returns The channel ID
    */
-  openEthChannel(amount: string, peerAmount: string): Promise<string> {
-    return this.openChannelProcessor.openChannel(
-      utils.getTokenInfo(TokenType.ETH, ethers.constants.AddressZero),
-      ethers.utils.bigNumberify(amount),
-      ethers.utils.bigNumberify(peerAmount)
-    );
-  }
-
-  /**
-   * Opens an ERC-20 channel.
-   *
-   * @param tokenAddress - The token address
-   * @param amount - The amount to be deposited into the channel, in wei
-   * @param peerAmount - The amount to be deposited into the channel by the
-   *     counterparty, in wei
-   * @returns The channel ID
-   */
-  openErc20Channel(
+  openPaymentChannel(
+    tokenType: TokenTypeMap[keyof TokenTypeMap],
     tokenAddress: string,
     amount: string,
     peerAmount: string
   ): Promise<string> {
     return this.openChannelProcessor.openChannel(
-      utils.getTokenInfo(TokenType.ERC20, tokenAddress),
+      typeUtils.createTokenInfo(tokenType, tokenAddress),
       ethers.utils.bigNumberify(amount),
       ethers.utils.bigNumberify(peerAmount)
     );
   }
 
   /**
-   * Deposits ETH into a payment channel.
+   * Deposits into a payment channel.
    *
-   * @param channelId - The channel ID.
-   * @param amount - The amount to be deposited into the channel, in wei
+   * @param channelId The channel ID.
+   * @param tokenType The token type, currently supporting ETH and ERC20
+   * @param tokenAddress The token address
+   * @param amount The amount to be deposited into the channel, in wei
    * @returns The deposit transaction hash
    */
-  depositEth(channelId: string, amount: string): Promise<string> {
-    return this.depositProcessor.deposit(
-      channelId,
-      utils.getTokenInfo(TokenType.ETH, ethers.constants.AddressZero),
-      amount
-    );
-  }
-
-  /**
-   * Deposits ERC-20 into a payment channel.
-   *
-   * @param channelId - The channel ID.
-   * @param tokenAddress - The token address
-   * @param amount - The amount to be deposited into the channel, in wei
-   * @returns The deposit transaction hash
-   */
-  depositErc20(
+  deposit(
     channelId: string,
+    tokenType: TokenTypeMap[keyof TokenTypeMap],
     tokenAddress: string,
     amount: string
   ): Promise<string> {
     return this.depositProcessor.deposit(
       channelId,
-      utils.getTokenInfo(TokenType.ERC20, tokenAddress),
+      typeUtils.createTokenInfo(tokenType, tokenAddress),
       amount
     );
   }
 
   /**
-   * Sends an unconditional ETH payment.
+   * Sends a payment with a single hash lock condition.
    *
-   * @param destination - The ETH address of the recipient
-   * @param amount - The amount to be sent, in wei
+   * @param tokenType The token type, currently supporting ETH and ERC20
+   * @param tokenAddress The token address
+   * @param destination The ETH address of the recipient
+   * @param amount The amount to be sent, in wei
+   * @param note An optional payment note with additional information for the
+   *     recipient
    * @returns The payment ID
    */
-  async sendEth(destination: string, amount: string): Promise<string> {
-    destination = ethers.utils.getAddress(destination);
-    return this.sendPaymentProcessor.sendConditionalPayment(
-      utils.getTokenInfo(TokenType.ETH, ethers.constants.AddressZero),
-      ethers.utils.getAddress(destination),
-      ethers.utils.bigNumberify(amount),
-      TransferFunctionType.BOOLEAN_AND,
-      [await SendPaymentProcessor.generateHashLockCondition(this.db)],
-      this.config.paymentTimeout,
-      undefined
-    );
-  }
-
-  /**
-   * Sends an unconditional ERC-20 payment.
-   *
-   * @param tokenAddress - The token address
-   * @param destination - The ETH address of the recipient
-   * @param amount - The amount to be sent, in wei
-   * @returns The payment ID
-   */
-  async sendErc20(
+  async sendPayment(
+    tokenType: TokenTypeMap[keyof TokenTypeMap],
     tokenAddress: string,
     destination: string,
-    amount: string
+    amount: string,
+    note?: Any
   ): Promise<string> {
     destination = ethers.utils.getAddress(destination);
     return this.sendPaymentProcessor.sendConditionalPayment(
-      utils.getTokenInfo(TokenType.ERC20, tokenAddress),
+      typeUtils.createTokenInfo(tokenType, tokenAddress),
       ethers.utils.getAddress(destination),
       ethers.utils.bigNumberify(amount),
       TransferFunctionType.BOOLEAN_AND,
-      [await SendPaymentProcessor.generateHashLockCondition(this.db)],
-      this.config.paymentTimeout,
-      undefined
+      [await HashLock.generateHashLockCondition(this.db)],
+      this.config.defaultPaymentTimeout,
+      note
     );
   }
 
   /**
-   * Sends an conditional payment.
+   * Sends a conditional payment.
    *
-   * @param tokenType - The token type, currently supporting ETH and ERC20
-   * @param tokenAddress - The token address (only used for ERC20 payments)
-   * @param destination - The ETH address of the recipient
-   * @param amount - The amount to be sent, in wei
+   * @param tokenType The token type, currently supporting ETH and ERC20
+   * @param tokenAddress The token address (only used for ERC20 payments)
+   * @param destination The ETH address of the recipient
+   * @param amount The amount to be sent, in wei
    * @param transferFunctionType - The type of the transfer logic. Currently
    *     only supporting BOOLEAN_AND
-   * @param conditions - The list of Condition objects
-   * @param timeout - The number of blocks after which the payment expires
-   * @param note - A payment note for additional processing
+   * @param conditions The list of Condition objects
+   * @param timeout The number of blocks after which the payment expires
+   * @param note An optional payment note with additional information for the
+   *     recipient
    * @returns The payment ID
    */
   sendConditionalPayment(
@@ -290,7 +313,7 @@ export class Celer {
   ): Promise<string> {
     destination = ethers.utils.getAddress(destination);
     return this.sendPaymentProcessor.sendConditionalPayment(
-      utils.getTokenInfo(tokenType, tokenAddress),
+      typeUtils.createTokenInfo(tokenType, tokenAddress),
       ethers.utils.getAddress(destination),
       ethers.utils.bigNumberify(amount),
       transferFunctionType,
@@ -303,7 +326,7 @@ export class Celer {
   /**
    * Gets the info about a payment channel
    *
-   * @param channelId - The channel ID
+   * @param channelId The channel ID
    * @returns The payment channel info
    */
   getPaymentChannelInfo(channelId: string): Promise<PaymentChannelInfo> {
@@ -313,7 +336,7 @@ export class Celer {
   /**
    * Gets the info about a payment
    *
-   * @param paymentId - The payment ID
+   * @param paymentId The payment ID
    * @returns The payment info
    */
   getPaymentInfo(paymentId: string): Promise<PaymentInfo> {
@@ -323,7 +346,7 @@ export class Celer {
   /**
    * Gets the IDs of all incoming payments on a channel
    *
-   * @param channelId - The channel ID
+   * @param channelId The channel ID
    * @returns The list of IDs for all incoming payments
    */
   getIncomingPaymentIds(channelId: string): Promise<string[]> {
@@ -333,10 +356,28 @@ export class Celer {
   /**
    * Gets the IDs of all outgoing payments on a channel
    *
-   * @param channelId - The channel ID
+   * @param channelId The channel ID
    * @returns The list of IDs for all outgoing payments
    */
   getOutgoingPaymentIds(channelId: string): Promise<string[]> {
     return this.getPaymentInfoProcessor.getOutgoingPaymentIds(channelId);
+  }
+
+  /**
+   * Generates a and stores a hash lock condition for a payment.
+   *
+   * @returns A hash lock condition
+   */
+  generateHashLockCondition(): Promise<Condition> {
+    return HashLock.generateHashLockCondition(this.db);
+  }
+
+  /**
+   * Removes a hash lock condition from storage.
+   *
+   * @param condition A hash lock condition
+   */
+  removeHashlockCondition(condition: Condition): Promise<void> {
+    return HashLock.removeHashLockCondition(this.db, condition);
   }
 }

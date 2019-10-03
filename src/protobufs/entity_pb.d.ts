@@ -225,8 +225,8 @@ export namespace TransferFunction {
 }
 
 export class ConditionalPay extends jspb.Message {
-  getPayTimestamp(): number;
-  setPayTimestamp(value: number): void;
+  getPayTimestamp(): string;
+  setPayTimestamp(value: string): void;
 
   getSrc(): Uint8Array | string;
   getSrc_asU8(): Uint8Array;
@@ -271,7 +271,7 @@ export class ConditionalPay extends jspb.Message {
 
 export namespace ConditionalPay {
   export type AsObject = {
-    payTimestamp: number,
+    payTimestamp: string,
     src: Uint8Array | string,
     dest: Uint8Array | string,
     conditionsList: Array<Condition.AsObject>,

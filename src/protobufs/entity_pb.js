@@ -1965,7 +1965,7 @@ proto.entity.ConditionalPay.prototype.toObject = function(opt_includeInstance) {
  */
 proto.entity.ConditionalPay.toObject = function(includeInstance, msg) {
   var f, obj = {
-    payTimestamp: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    payTimestamp: jspb.Message.getFieldWithDefault(msg, 1, "0"),
     src: msg.getSrc_asB64(),
     dest: msg.getDest_asB64(),
     conditionsList: jspb.Message.toObjectList(msg.getConditionsList(),
@@ -2011,7 +2011,7 @@ proto.entity.ConditionalPay.deserializeBinaryFromReader = function(msg, reader) 
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {number} */ (reader.readUint64());
+      var value = /** @type {string} */ (reader.readUint64String());
       msg.setPayTimestamp(value);
       break;
     case 2:
@@ -2074,8 +2074,8 @@ proto.entity.ConditionalPay.prototype.serializeBinary = function() {
 proto.entity.ConditionalPay.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getPayTimestamp();
-  if (f !== 0) {
-    writer.writeUint64(
+  if (parseInt(f, 10) !== 0) {
+    writer.writeUint64String(
       1,
       f
     );
@@ -2136,16 +2136,16 @@ proto.entity.ConditionalPay.serializeBinaryToWriter = function(message, writer) 
 
 /**
  * optional uint64 pay_timestamp = 1;
- * @return {number}
+ * @return {string}
  */
 proto.entity.ConditionalPay.prototype.getPayTimestamp = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, "0"));
 };
 
 
-/** @param {number} value */
+/** @param {string} value */
 proto.entity.ConditionalPay.prototype.setPayTimestamp = function(value) {
-  jspb.Message.setProto3IntField(this, 1, value);
+  jspb.Message.setProto3StringIntField(this, 1, value);
 };
 
 

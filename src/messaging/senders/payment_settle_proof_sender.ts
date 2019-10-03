@@ -2,7 +2,7 @@
  * @license
  * The MIT License
  *
- * Copyright (c) 2019 ScaleSphere Foundation LTD
+ * Copyright (c) 2019 Celer Network
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,11 +23,6 @@
  * IN THE SOFTWARE.
  */
 
-export class HashLock {
-  readonly secret: Uint8Array;
-  readonly hash: string;
-  constructor(secret: Uint8Array, hash: string) {
-    this.secret = secret;
-    this.hash = hash;
-  }
+export class PaymentSettleProofSender {
+  constructor() {}
 }

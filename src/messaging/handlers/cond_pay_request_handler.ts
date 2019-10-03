@@ -25,26 +25,26 @@
 
 import { ethers } from 'ethers';
 
-import { Config } from '../config';
-import { CustomSigner } from '../crypto/custom_signer';
-import { ConditionalPay, SimplexPaymentChannel } from '../protobufs/entity_pb';
+import { Config } from '../../config';
+import { CustomSigner } from '../../crypto/custom_signer';
+import { Database } from '../../data/database';
+import { Payment, PaymentStatus } from '../../data/payment';
+import { PaymentChannel } from '../../data/payment_channel';
+import {
+  ConditionalPay,
+  SimplexPaymentChannel
+} from '../../protobufs/entity_pb';
 import {
   CelerMsg,
+  CondPayReceipt,
   CondPayResponse,
   ErrCode,
-  ErrCodeMap,
   Error as ErrorResponse,
   SignedSimplexState
-} from '../protobufs/message_pb';
-import { Database } from '../storage/database';
-import { Payment, PaymentStatus } from '../storage/payment';
-import { PaymentChannelStatus } from '../storage/payment_channel';
-import * as errorUtils from '../utils/errors';
-import * as paymentUtils from '../utils/payments';
-import * as typeUtils from '../utils/types';
-import { MessageManager } from './message_manager';
-
-const INVALID_PENDING_PAYMENTS = 'Invalid pending payments';
+} from '../../protobufs/message_pb';
+import * as errorUtils from '../../utils/errors';
+import * as typeUtils from '../../utils/types';
+import { MessageManager } from '../message_manager';
 
 export class CondPayRequestHandler {
   private readonly db: Database;
@@ -66,9 +66,8 @@ export class CondPayRequestHandler {
     this.peerAddress = ethers.utils.getAddress(this.config.ospEthAddress);
   }
 
-  async handle(incomingMessage: CelerMsg): Promise<void> {
-    const db = this.db;
-    const request = incomingMessage.getCondPayRequest();
+  async handle(requestMessage: CelerMsg): Promise<void> {
+    const request = requestMessage.getCondPayRequest();
     const receivedSignedSimplexState = request.getStateOnlyPeerFromSig();
     const receivedSimplexStateBytes = receivedSignedSimplexState.getSimplexState_asU8();
     const receivedSimplexState = SimplexPaymentChannel.deserializeBinary(
@@ -77,16 +76,14 @@ export class CondPayRequestHandler {
     const conditionalPay = ConditionalPay.deserializeBinary(
       request.getCondPay_asU8()
     );
-    const paymentId = paymentUtils.calculatePaymentId(conditionalPay);
+    const paymentId = Payment.calculatePaymentId(conditionalPay);
     const receivedChannelId = ethers.utils.hexlify(
       receivedSimplexState.getChannelId_asU8()
     );
 
     const {
-      valid,
-      lastCosignedSimplexState,
-      errCode,
-      errReason
+      result: { valid, errCode, errReason },
+      lastCosignedSimplexState
     } = await this.verifyCondPayRequest(
       await this.signer.provider.getSigner().getAddress(),
       paymentId,
@@ -98,31 +95,44 @@ export class CondPayRequestHandler {
       conditionalPay
     );
 
-    const outgoingMessage = new CelerMsg();
-    outgoingMessage.setToAddr(conditionalPay.getSrc_asU8());
+    const responseMessage = new CelerMsg();
     const condPayResponse = new CondPayResponse();
     if (valid) {
-      const mySig = await this.signer.signHash(receivedSimplexStateBytes);
-      receivedSignedSimplexState.setSigOfPeerTo(ethers.utils.arrayify(mySig));
+      // Send CondPayResponse and CondPayReceipt
+      const selfSignature = await this.signer.signHash(
+        receivedSimplexStateBytes
+      );
+      const selfSignatureBytes = ethers.utils.arrayify(selfSignature);
+      receivedSignedSimplexState.setSigOfPeerTo(selfSignatureBytes);
 
+      const db = this.db;
       const channel = await db.paymentChannels.get(receivedChannelId);
       channel.setIncomingSignedSimplexState(receivedSignedSimplexState);
       await db.paymentChannels.put(channel);
 
       condPayResponse.setStateCosigned(receivedSignedSimplexState);
-      outgoingMessage.setCondPayResponse(condPayResponse);
-      await this.messageManager.sendMessage(outgoingMessage);
+      responseMessage.setCondPayResponse(condPayResponse);
+      await this.messageManager.sendMessage(responseMessage);
 
       const payment = new Payment(
         paymentId,
         conditionalPay,
-        request.getNote(),
         receivedChannelId,
-        undefined
+        undefined,
+        request.getNote()
       );
       payment.status = PaymentStatus.CO_SIGNED_PENDING;
       await db.payments.add(payment);
+
+      const receiptMessage = new CelerMsg();
+      receiptMessage.setToAddr(conditionalPay.getSrc_asU8());
+      const condPayReceipt = new CondPayReceipt();
+      condPayReceipt.setPayDestSig(selfSignatureBytes);
+      condPayReceipt.setPayId(ethers.utils.arrayify(paymentId));
+      receiptMessage.setCondPayReceipt(condPayReceipt);
+      await this.messageManager.sendMessage(receiptMessage);
     } else {
+      // Only send CondPayResponse with error and latest cosigned simplex state
       if (lastCosignedSimplexState) {
         condPayResponse.setStateCosigned(lastCosignedSimplexState);
       }
@@ -134,8 +144,8 @@ export class CondPayRequestHandler {
         errorResponse.setReason(errReason);
       }
       condPayResponse.setError(errorResponse);
-      outgoingMessage.setCondPayResponse(condPayResponse);
-      await this.messageManager.sendMessage(outgoingMessage);
+      responseMessage.setCondPayResponse(condPayResponse);
+      await this.messageManager.sendMessage(responseMessage);
     }
   }
 
@@ -149,132 +159,34 @@ export class CondPayRequestHandler {
     receivedSimplexStateBytes: Uint8Array,
     conditionalPay: ConditionalPay
   ): Promise<{
-    readonly valid: boolean;
+    readonly result: errorUtils.VerificationResult;
     readonly lastCosignedSimplexState?: SignedSimplexState;
-    readonly errCode?: ErrCodeMap[keyof ErrCodeMap];
-    readonly errReason?: string;
   }> {
     const db = this.db;
-
-    // Verify channel existence
-    const channel = await db.paymentChannels.get(receivedChannelId);
-    if (!channel) {
-      return {
-        valid: false,
-        errReason: errorUtils.unknownChannel(receivedChannelId).message
-      };
+    const {
+      result: existenceResult,
+      channel,
+      storedSignedSimplexState,
+      storedSimplexState
+    } = await PaymentChannel.verifyChannelExistence(db, receivedChannelId);
+    if (!existenceResult.valid) {
+      return { result: existenceResult };
     }
 
-    const storedSignedSimplexState = channel.getIncomingSignedSimplexState();
-    const storedSimplexState = SimplexPaymentChannel.deserializeBinary(
-      storedSignedSimplexState.getSimplexState_asU8()
+    const commonResult = PaymentChannel.verifyCommonSimplexStates(
+      channel,
+      this.peerAddress,
+      receivedChannelId,
+      receivedBaseSeqNum,
+      receivedSignedSimplexState,
+      receivedSimplexState,
+      receivedSimplexStateBytes,
+      storedSimplexState
     );
-
-    // Verify channel status
-    if (channel.status !== PaymentChannelStatus.OPEN) {
+    if (!commonResult.valid) {
       return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errReason: errorUtils.paymentChannelNotOpen(receivedChannelId).message
-      };
-    }
-
-    // Verify peer signature
-    const peerSignature = ethers.utils.splitSignature(
-      receivedSignedSimplexState.getSigOfPeerFrom_asU8()
-    );
-    if (
-      !CustomSigner.isSignatureValid(
-        this.peerAddress,
-        receivedSimplexStateBytes,
-        peerSignature
-      )
-    ) {
-      return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errCode: ErrCode.INVALID_SIG
-      };
-    }
-
-    // Verify payment destination
-    if (
-      selfAddress !== typeUtils.bytesToAddress(conditionalPay.getDest_asU8())
-    ) {
-      return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errCode: ErrCode.WRONG_PEER
-      };
-    }
-
-    // Verify peerFrom
-    if (
-      ethers.utils.hexlify(receivedSimplexState.getPeerFrom_asU8()) !==
-      ethers.utils.hexlify(storedSimplexState.getPeerFrom_asU8())
-    ) {
-      return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errReason: 'Invalid peerFrom'
-      };
-    }
-
-    // Verify base sequence number and proposed sequence number
-    if (
-      !paymentUtils.isSeqNumValid(
-        storedSimplexState.getSeqNum(),
-        receivedSimplexState.getSeqNum(),
-        receivedBaseSeqNum
-      )
-    ) {
-      return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errCode: ErrCode.INVALID_SEQ_NUM
-      };
-    }
-
-    // Verify balance
-    const balance = channel.calculateBalance();
-    const receivedAmount = ethers.utils.bigNumberify(
-      conditionalPay
-        .getTransferFunc()
-        .getMaxTransfer()
-        .getReceiver()
-        .getAmt_asU8()
-    );
-    if (receivedAmount.gt(balance.freeReceivingCapacity)) {
-      return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errReason: 'Insufficient balance'
-      };
-    }
-
-    // Verify PayResolver address
-    if (
-      typeUtils.bytesToAddress(conditionalPay.getPayResolver_asU8()) !==
-      ethers.utils.getAddress(this.config.payResolverAddress)
-    ) {
-      return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errReason: 'Invalid PayResolver address'
-      };
-    }
-
-    // Verify last payment resolve deadline
-    // TODO(dominator008): Check this logic
-    const deadline = Math.max(
-      storedSimplexState.getLastPayResolveDeadline(),
-      conditionalPay.getResolveDeadline()
-    );
-    if (deadline !== receivedSimplexState.getLastPayResolveDeadline()) {
-      return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errReason: 'Invalid last payment resolve deadline'
+        result: commonResult,
+        lastCosignedSimplexState: storedSignedSimplexState
       };
     }
 
@@ -294,9 +206,74 @@ export class CondPayRequestHandler {
       )
     ) {
       return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errReason: 'Invalid transfer amount'
+        result: {
+          valid: false,
+          errReason: 'Invalid transfer amount'
+        },
+        lastCosignedSimplexState: storedSignedSimplexState
+      };
+    }
+
+    // Verify payment destination
+    if (
+      selfAddress !== typeUtils.bytesToAddress(conditionalPay.getDest_asU8())
+    ) {
+      return {
+        result: {
+          valid: false,
+          errCode: ErrCode.WRONG_PEER
+        },
+        lastCosignedSimplexState: storedSignedSimplexState
+      };
+    }
+
+    // Verify balance assuming all payments will be settled with the maximal
+    // transfer amount
+    const balance = channel.calculateBalance();
+    const receivedAmount = ethers.utils.bigNumberify(
+      conditionalPay
+        .getTransferFunc()
+        .getMaxTransfer()
+        .getReceiver()
+        .getAmt_asU8()
+    );
+    if (receivedAmount.gt(balance.freeReceivingCapacity)) {
+      return {
+        result: {
+          valid: false,
+          errReason: 'Insufficient balance'
+        },
+        lastCosignedSimplexState: storedSignedSimplexState
+      };
+    }
+
+    // Verify PayResolver address
+    if (
+      typeUtils.bytesToAddress(conditionalPay.getPayResolver_asU8()) !==
+      ethers.utils.getAddress(this.config.payResolverAddress)
+    ) {
+      return {
+        result: {
+          valid: false,
+          errReason: 'Invalid PayResolver address'
+        },
+        lastCosignedSimplexState: storedSignedSimplexState
+      };
+    }
+
+    // Verify last payment resolve deadline
+    // TODO(dominator008): Check this logic
+    const deadline = Math.max(
+      storedSimplexState.getLastPayResolveDeadline(),
+      conditionalPay.getResolveDeadline()
+    );
+    if (deadline !== receivedSimplexState.getLastPayResolveDeadline()) {
+      return {
+        result: {
+          valid: false,
+          errReason: 'Invalid last payment resolve deadline'
+        },
+        lastCosignedSimplexState: storedSignedSimplexState
       };
     }
 
@@ -309,51 +286,62 @@ export class CondPayRequestHandler {
     );
     if (!storedPendingAmount.add(receivedAmount).eq(receivedPendingAmount)) {
       return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errReason: 'Invalid total pending amount'
+        result: {
+          valid: false,
+          errReason: 'Invalid total pending amount'
+        },
+        lastCosignedSimplexState: storedSignedSimplexState
       };
     }
 
     // Verify max number of pending payments
-    const storedPendingPayments = storedSimplexState
+    const storedPendingPaymentIds = storedSimplexState
       .getPendingPayIds()
       .getPayIdsList();
-    const receivedPendingPayments = receivedSimplexState
+    const receivedPendingPaymentIds = receivedSimplexState
       .getPendingPayIds()
       .getPayIdsList();
-    if (receivedPendingPayments.length > this.config.maxPendingPayments) {
+    if (receivedPendingPaymentIds.length > this.config.maxPendingPayments) {
       return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errReason: 'Too many pending payments'
+        result: {
+          valid: false,
+          errReason: 'Too many pending payments'
+        },
+        lastCosignedSimplexState: storedSignedSimplexState
       };
     }
 
     // Verify pending payment list
     const [
-      addedPendingPayments,
-      removedPendingPayments
-    ] = paymentUtils.getAddedAndRemovedPendingPayments(
-      storedPendingPayments,
-      receivedPendingPayments
+      removedPendingPaymentIds,
+      addedPendingPaymentIds
+    ] = Payment.getListDifferences(
+      storedPendingPaymentIds,
+      receivedPendingPaymentIds
     );
     // Only allow one added pending payment and no removed payments
-    if (removedPendingPayments.length > 0 || addedPendingPayments.length > 1) {
+    if (
+      removedPendingPaymentIds.length > 0 ||
+      addedPendingPaymentIds.length > 1
+    ) {
       return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errReason: INVALID_PENDING_PAYMENTS
+        result: {
+          valid: false,
+          errReason: errorUtils.INVALID_PENDING_PAYMENTS
+        },
+        lastCosignedSimplexState: storedSignedSimplexState
       };
     }
-    if (paymentId !== ethers.utils.hexlify(addedPendingPayments[0])) {
+    if (paymentId !== ethers.utils.hexlify(addedPendingPaymentIds[0])) {
       return {
-        valid: false,
-        lastCosignedSimplexState: storedSignedSimplexState,
-        errReason: INVALID_PENDING_PAYMENTS
+        result: {
+          valid: false,
+          errReason: errorUtils.INVALID_PENDING_PAYMENTS
+        },
+        lastCosignedSimplexState: storedSignedSimplexState
       };
     }
 
-    return { valid: true };
+    return { result: { valid: true } };
   }
 }
