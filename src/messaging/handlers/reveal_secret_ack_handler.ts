@@ -79,17 +79,20 @@ export class RevealSecretAckHandler {
     }
     // If the only condition is HASH_LOCK, settle the payment
     if (conditions.length === 1) {
-      return await this.paymentSettleRequestSender.sendPaymentSettleRequests([
-        {
-          payment,
-          settlementAmount: conditionalPay
-            .getTransferFunc()
-            .getMaxTransfer()
-            .getReceiver()
-            .getAmt_asU8(),
-          reason: PaymentSettleReason.PAY_PAID_MAX
-        }
-      ]);
+      return await this.paymentSettleRequestSender.sendPaymentSettleRequests(
+        payment.outgoingChannelId,
+        [
+          {
+            payment,
+            settlementAmount: conditionalPay
+              .getTransferFunc()
+              .getMaxTransfer()
+              .getReceiver()
+              .getAmt_asU8(),
+            reason: PaymentSettleReason.PAY_PAID_MAX
+          }
+        ]
+      );
     }
   }
 }

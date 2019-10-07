@@ -27,8 +27,9 @@ import { ethers } from 'ethers';
 
 import { CustomSigner } from '../../crypto/custom_signer';
 import { Database } from '../../data/database';
-import { PaymentStatus } from '../../data/payment';
+import { Payment, PaymentStatus } from '../../data/payment';
 import { PaymentChannel } from '../../data/payment_channel';
+import { SimplexPaymentChannel } from '../../protobufs/entity_pb';
 import { CelerMsg, ErrCode } from '../../protobufs/message_pb';
 
 export class CondPayResponseHandler {
@@ -45,23 +46,18 @@ export class CondPayResponseHandler {
   async handle(message: CelerMsg): Promise<void> {
     const response = message.getCondPayResponse();
     const db = this.db;
-    const peerAddress = this.peerAddress;
-    if (response.hasError()) {
-      switch (response.getError().getCode()) {
-        case ErrCode.INVALID_SEQ_NUM:
-          await PaymentChannel.storeCosignedSimplexState(
-            response.getStateCosigned(),
-            db,
-            peerAddress
-          );
-        default:
-      }
-      return;
-    }
-
     const selfAddress = await this.signer.provider.getSigner().getAddress();
+    const peerAddress = this.peerAddress;
     const receivedSignedSimplexState = response.getStateCosigned();
-    const receivedSimplexStateBytes = receivedSignedSimplexState.getSimplexState_asU8();
+    const [
+      receivedSimplexState,
+      receivedSimplexStateBytes
+    ] = PaymentChannel.deserializeSignedSimplexState(
+      receivedSignedSimplexState
+    );
+    const channelId = ethers.utils.hexlify(
+      receivedSimplexState.getChannelId_asU8()
+    );
 
     // Verify signatures
     const selfSignature = ethers.utils.splitSignature(
@@ -85,28 +81,63 @@ export class CondPayResponseHandler {
       return;
     }
 
-    await db.transaction('rw', db.paymentChannels, db.payments, async () => {
-      // TODO(dominator008): Maybe support multiple in-flight payments
-      const payment = await db.payments.get({
-        status: PaymentStatus.PEER_FROM_SIGNED_PENDING
+    if (response.hasError()) {
+      switch (response.getError().getCode()) {
+        case ErrCode.INVALID_SEQ_NUM:
+          await PaymentChannel.storeOutgoingCosignedSimplexState(
+            receivedSignedSimplexState,
+            db,
+            channelId
+          );
+        default:
+      }
+      // Mark all PEER_FROM_SIGNED_PENDING payments as FAILED for now
+      // TODO(dominator008): Revisit this
+      await db.transaction('rw', db.paymentChannels, db.payments, async () => {
+        const payments = await db.payments
+          .where({
+            status: PaymentStatus.PEER_FROM_SIGNED_PENDING
+          })
+          .toArray();
+        if (payments.length === 0) {
+          return;
+        }
+        for (const payment of payments) {
+          payment.status = PaymentStatus.FAILED;
+          await db.payments.put(payment);
+        }
       });
-      if (!payment) {
-        return;
-      }
-      const channel = await db.paymentChannels.get(payment.outgoingChannelId);
-      const storedSimplexStateBytes = channel
-        .getOutgoingSignedSimplexState()
-        .getSimplexState_asU8();
-      if (
-        ethers.utils.hexlify(receivedSimplexStateBytes) !==
-        ethers.utils.hexlify(storedSimplexStateBytes)
-      ) {
-        return;
-      }
-      channel.setOutgoingSignedSimplexState(receivedSignedSimplexState);
-      await db.paymentChannels.put(channel);
-      payment.status = PaymentStatus.CO_SIGNED_PENDING;
-      await db.payments.put(payment);
-    });
+    } else {
+      await db.transaction('rw', db.paymentChannels, db.payments, async () => {
+        // TODO(dominator008): Maybe support multiple in-flight payments
+        const payments = await db.payments
+          .where({
+            status: PaymentStatus.PEER_FROM_SIGNED_PENDING
+          })
+          .toArray();
+        if (payments.length === 0) {
+          return;
+        }
+        const payment = payments[0];
+        const channel = await db.paymentChannels.get(channelId);
+        if (!channel) {
+          return;
+        }
+        const storedSimplexState = SimplexPaymentChannel.deserializeBinary(
+          channel.getOutgoingSignedSimplexState().getSimplexState_asU8()
+        );
+        // Verify that the received sequence number is higher than the stored
+        // one
+        if (
+          receivedSimplexState.getSeqNum() <= storedSimplexState.getSeqNum()
+        ) {
+          return;
+        }
+        channel.setOutgoingSignedSimplexState(receivedSignedSimplexState);
+        await db.paymentChannels.put(channel);
+        payment.status = PaymentStatus.CO_SIGNED_PENDING;
+        await db.payments.put(payment);
+      });
+    }
   }
 }

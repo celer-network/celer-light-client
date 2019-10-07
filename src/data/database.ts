@@ -33,7 +33,7 @@ import { HashLock } from './hash_lock';
 import { Payment } from './payment';
 import { PaymentChannel } from './payment_channel';
 
-const CELER_DATABASE = `CelerDatabase`;
+const CELER_DATABASE = 'CelerDatabase';
 
 export class Database extends Dexie {
   readonly paymentChannels: Dexie.Table<PaymentChannel, string>;
@@ -45,8 +45,8 @@ export class Database extends Dexie {
 
     const db = this;
     db.version(1).stores({
-      paymentChannels: 'channelId,peerAddress,tokenAddress',
-      payments: 'paymentId,status,incomingChannelId,outgoingChannelId',
+      paymentChannels: 'channelId, [selfAddress+peerAddress+tokenAddress]',
+      payments: 'paymentId, status',
       hashLocks: 'hash'
     });
 

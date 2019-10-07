@@ -40,29 +40,32 @@ export enum PaymentChannelStatus {
 }
 
 export class PaymentChannel {
-  channelId: string;
-  peerAddress: string;
-  tokenType: TokenTypeMap[keyof TokenTypeMap];
-  tokenAddress: string;
+  readonly channelId: string;
+  readonly selfAddress: string;
+  readonly peerAddress: string;
+  readonly tokenType: TokenTypeMap[keyof TokenTypeMap];
+  readonly tokenAddress: string;
+
   depositWithdrawal: DepositWithdrawal;
   status: PaymentChannelStatus;
-  sequenceNumber: number;
+
   private incomingSignedSimplexState: Uint8Array; // SignedSimplexState
   private outgoingSignedSimplexState: Uint8Array; // SignedSimplexState
 
   constructor(
     channelId: string,
+    selfAddress: string,
     peerAddress: string,
     tokenType: TokenTypeMap[keyof TokenTypeMap],
     tokenAddress: string
   ) {
     this.channelId = channelId;
+    this.selfAddress = selfAddress;
     this.peerAddress = peerAddress;
     this.tokenType = tokenType;
     this.tokenAddress = tokenAddress;
 
     this.status = PaymentChannelStatus.OPEN;
-    this.sequenceNumber = 0;
   }
 
   setIncomingSignedSimplexState(state: SignedSimplexState): void {
@@ -94,8 +97,10 @@ export class PaymentChannel {
     );
 
     const depositWithdrawal = this.depositWithdrawal;
-    const myDeposit = ethers.utils.bigNumberify(depositWithdrawal.selfDeposit);
-    const myWithdrawal = ethers.utils.bigNumberify(
+    const selfDeposit = ethers.utils.bigNumberify(
+      depositWithdrawal.selfDeposit
+    );
+    const selfWithdrawal = ethers.utils.bigNumberify(
       depositWithdrawal.selfWithdrawal
     );
     const peerDeposit = ethers.utils.bigNumberify(
@@ -104,7 +109,7 @@ export class PaymentChannel {
     const peerWithdrawal = ethers.utils.bigNumberify(
       depositWithdrawal.peerWithdrawal
     );
-    const myPendingWithdrawal = depositWithdrawal.selfPendingWithdrawal
+    const selfPendingWithdrawal = depositWithdrawal.selfPendingWithdrawal
       ? ethers.utils.bigNumberify(
           depositWithdrawal.selfPendingWithdrawal.amount
         )
@@ -133,9 +138,9 @@ export class PaymentChannel {
       incomingSimplexState.getTotalPendingAmount_asU8()
     );
 
-    const freeSendingCapacity = myDeposit
-      .sub(myWithdrawal)
-      .sub(myPendingWithdrawal)
+    const freeSendingCapacity = selfDeposit
+      .sub(selfWithdrawal)
+      .sub(selfPendingWithdrawal)
       .add(transferFromPeer)
       .sub(transferToPeer)
       .sub(pendingTransferToPeer);
@@ -170,20 +175,18 @@ export class PaymentChannel {
     signedSimplexState.setSimplexState(simplexState.serializeBinary());
   }
 
-  static async storeCosignedSimplexState(
+  static async storeOutgoingCosignedSimplexState(
     cosignedState: SignedSimplexState,
     db: Database,
-    peerAddress: string
+    channelId: string
   ) {
     await db.transaction('rw', db.paymentChannels, async () => {
-      const paymentChannel = await db.paymentChannels.get({
-        peerAddress
-      });
-      if (!paymentChannel) {
+      const channel = await db.paymentChannels.get(channelId);
+      if (!channel) {
         return;
       }
-      paymentChannel.setOutgoingSignedSimplexState(cosignedState);
-      await db.paymentChannels.put(paymentChannel);
+      channel.setOutgoingSignedSimplexState(cosignedState);
+      await db.paymentChannels.put(channel);
     });
   }
 

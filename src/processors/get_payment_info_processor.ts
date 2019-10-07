@@ -55,9 +55,9 @@ export class GetPaymentInfoProcessor {
       tokenType: tokenInfo.getTokenType(),
       tokenAddress: typeUtils.bytesToAddress(tokenInfo.getTokenAddress_asU8()),
       status: payment.status,
-      settlementAmount: ethers.utils
-        .bigNumberify(payment.settlementAmount)
-        .toString()
+      settlementAmount:
+        payment.settlementAmount &&
+        ethers.utils.bigNumberify(payment.settlementAmount).toString()
     };
   }
 

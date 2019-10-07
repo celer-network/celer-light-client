@@ -53,7 +53,7 @@ export class ResolvePaymentProcessor {
   async getOnChainPaymentInfo(paymentId: string): Promise<OnChainPaymentInfo> {
     const payRegistry = new ethers.Contract(
       this.config.payRegistryAddress,
-      String(payRegistryAbi),
+      JSON.stringify(payRegistryAbi),
       this.provider
     );
     const [amount, resolveDeadline]: [

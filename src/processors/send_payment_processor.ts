@@ -29,7 +29,7 @@ import { Any } from 'google-protobuf/google/protobuf/any_pb';
 import { CondPayRequestSender } from '../messaging/senders/cond_pay_request_sender';
 import {
   Condition,
-  TokenInfo,
+  TokenTypeMap,
   TransferFunctionType,
   TransferFunctionTypeMap
 } from '../protobufs/entity_pb';
@@ -42,7 +42,8 @@ export class SendPaymentProcessor {
   }
 
   async sendConditionalPayment(
-    tokenInfo: TokenInfo,
+    tokenType: TokenTypeMap[keyof TokenTypeMap],
+    tokenAddress: string,
     destination: string,
     amount: BigNumber,
     transferFunctionType: TransferFunctionTypeMap[keyof TransferFunctionTypeMap],
@@ -54,7 +55,8 @@ export class SendPaymentProcessor {
       throw new Error('Unsupported transfer function type');
     }
     return this.condPayRequestSender.sendConditionalPayment(
-      tokenInfo,
+      tokenType,
+      tokenAddress,
       destination,
       amount,
       transferFunctionType,

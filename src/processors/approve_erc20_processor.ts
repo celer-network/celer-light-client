@@ -48,7 +48,7 @@ export class ApproveErc20Processor {
     );
     const tokenContract = new ethers.Contract(
       tokenAddress,
-      String(erc20Abi),
+      JSON.stringify(erc20Abi),
       signer
     );
 

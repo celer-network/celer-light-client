@@ -64,7 +64,6 @@ import {
   TransferFunctionTypeMap
 } from '../protobufs/entity_pb';
 import { AuthReq, CelerMsg } from '../protobufs/message_pb';
-import * as typeUtils from '../utils/types';
 import { PaymentChannelInfo } from './payment_channel_info';
 import { PaymentInfo } from './payment_info';
 
@@ -123,10 +122,11 @@ export class Celer {
       config
     );
     this.sendPaymentProcessor = new SendPaymentProcessor(condPayRequestSender);
-    this.resolvePaymentProcessor = new ResolvePaymentProcessor(
+    const resolvePaymentProcessor = new ResolvePaymentProcessor(
       provider,
       config
     );
+    this.resolvePaymentProcessor = resolvePaymentProcessor;
     this.getPaymentChannelInfoProcessor = new GetPaymentChannelInfoProcessor(
       db
     );
@@ -154,7 +154,13 @@ export class Celer {
     );
     this.messageManager.setHandler(
       CelerMsg.MessageCase.PAYMENT_SETTLE_REQUEST,
-      new PaymentSettleRequestHandler(db, messageManager, signer, config)
+      new PaymentSettleRequestHandler(
+        db,
+        messageManager,
+        resolvePaymentProcessor,
+        signer,
+        config
+      )
     );
     this.messageManager.setHandler(
       CelerMsg.MessageCase.PAYMENT_SETTLE_RESPONSE,
@@ -165,7 +171,7 @@ export class Celer {
       new PaymentSettleProofHandler(
         db,
         paymentSettleRequestSender,
-        this.resolvePaymentProcessor
+        resolvePaymentProcessor
       )
     );
   }
@@ -187,9 +193,11 @@ export class Celer {
       await client.provider.getSigner().getAddress()
     );
     const peerAddressBytes = ethers.utils.arrayify(client.peerAddress);
+    // Use Unix timestamp and pad to 8 bytes as required by the OSP
     const timestamp = Math.floor(Date.now() / 1000);
-    const timestampBytes = ethers.utils.arrayify(
-      ethers.utils.bigNumberify(timestamp)
+    const timestampBytes = ethers.utils.padZeros(
+      ethers.utils.arrayify(ethers.utils.bigNumberify(timestamp)),
+      8
     );
     const signatureBytes = ethers.utils.arrayify(
       await client.signer.signHash(timestampBytes)
@@ -228,7 +236,8 @@ export class Celer {
     peerAmount: string
   ): Promise<string> {
     return this.openChannelProcessor.openChannel(
-      typeUtils.createTokenInfo(tokenType, tokenAddress),
+      tokenType,
+      tokenAddress,
       ethers.utils.bigNumberify(amount),
       ethers.utils.bigNumberify(peerAmount)
     );
@@ -239,21 +248,15 @@ export class Celer {
    *
    * @param channelId The channel ID.
    * @param tokenType The token type, currently supporting ETH and ERC20
-   * @param tokenAddress The token address
    * @param amount The amount to be deposited into the channel, in wei
    * @returns The deposit transaction hash
    */
   deposit(
     channelId: string,
     tokenType: TokenTypeMap[keyof TokenTypeMap],
-    tokenAddress: string,
     amount: string
   ): Promise<string> {
-    return this.depositProcessor.deposit(
-      channelId,
-      typeUtils.createTokenInfo(tokenType, tokenAddress),
-      amount
-    );
+    return this.depositProcessor.deposit(channelId, tokenType, amount);
   }
 
   /**
@@ -274,9 +277,9 @@ export class Celer {
     amount: string,
     note?: Any
   ): Promise<string> {
-    destination = ethers.utils.getAddress(destination);
     return this.sendPaymentProcessor.sendConditionalPayment(
-      typeUtils.createTokenInfo(tokenType, tokenAddress),
+      tokenType,
+      tokenAddress,
       ethers.utils.getAddress(destination),
       ethers.utils.bigNumberify(amount),
       TransferFunctionType.BOOLEAN_AND,
@@ -311,9 +314,9 @@ export class Celer {
     timeout: number,
     note: Any
   ): Promise<string> {
-    destination = ethers.utils.getAddress(destination);
     return this.sendPaymentProcessor.sendConditionalPayment(
-      typeUtils.createTokenInfo(tokenType, tokenAddress),
+      tokenType,
+      tokenAddress,
       ethers.utils.getAddress(destination),
       ethers.utils.bigNumberify(amount),
       transferFunctionType,

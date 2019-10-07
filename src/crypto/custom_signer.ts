@@ -33,6 +33,13 @@ export class CustomSigner {
     this.provider = provider;
   }
 
+  /**
+   * Similar to openzeppelin.ECDSA.toEthSignedMessageHash(). Following the
+   * suggestions in
+   * {@link https://medium.com/@yaoshiang/ethereums-ecrecover-openzeppelin-s-ecdsa-and-web3-s-sign-8ff8d16595e1}
+   *
+   * @param data The bytes to be signed
+   */
   async signHash(data: Uint8Array): Promise<string> {
     const hash = ethers.utils.arrayify(ethers.utils.keccak256(data));
     const signature = await this.provider.getSigner().signMessage(hash);

@@ -16,8 +16,8 @@ import {
   Condition,
   ConditionalPay,
   SimplexPaymentChannel,
-  TokenInfo,
   TokenTransfer,
+  TokenTypeMap,
   TransferFunction,
   TransferFunctionType,
   TransferFunctionTypeMap
@@ -28,6 +28,7 @@ import {
   SignedSimplexState
 } from '../../protobufs/message_pb';
 import * as errorUtils from '../../utils/errors';
+import * as typeUtils from '../../utils/types';
 import { MessageManager } from '../message_manager';
 
 export class CondPayRequestSender {
@@ -54,7 +55,8 @@ export class CondPayRequestSender {
   }
 
   async sendConditionalPayment(
-    tokenInfo: TokenInfo,
+    tokenType: TokenTypeMap[keyof TokenTypeMap],
+    tokenAddress: string,
     destination: string,
     amount: BigNumber,
     transferFunctionType: TransferFunctionTypeMap[keyof TransferFunctionTypeMap],
@@ -66,7 +68,7 @@ export class CondPayRequestSender {
       throw new Error('Unsupported transfer function type');
     }
     const transfer = new TokenTransfer();
-    transfer.setToken(tokenInfo);
+    transfer.setToken(typeUtils.createTokenInfo(tokenType, tokenAddress));
     const destinationBytes = ethers.utils.arrayify(destination);
     const accountAmount = new AccountAmtPair();
     accountAmount.setAccount(destinationBytes);
@@ -98,8 +100,19 @@ export class CondPayRequestSender {
     const paymentId = Payment.calculatePaymentId(conditionalPay);
     const paymentBytes = conditionalPay.serializeBinary();
     const db = this.db;
+    const selfAddress = await this.signer.provider.getSigner().getAddress();
     const peerAddress = this.peerAddress;
-    const channel = await db.paymentChannels.get({ peerAddress });
+    const channels = await db.paymentChannels
+      .where({
+        selfAddress,
+        peerAddress,
+        tokenAddress
+      })
+      .toArray();
+    if (channels.length === 0) {
+      throw new Error('No available channel');
+    }
+    const channel = channels[0];
     const payment = new Payment(
       paymentId,
       conditionalPay,

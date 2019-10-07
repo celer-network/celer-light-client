@@ -56,6 +56,7 @@ import {
   OpenChannelResponse,
   SignedSimplexState
 } from '../protobufs/message_pb';
+import * as typeUtils from '../utils/types';
 
 export class OpenChannelProcessor {
   private readonly db: Database;
@@ -79,16 +80,25 @@ export class OpenChannelProcessor {
   }
 
   async openChannel(
-    tokenInfo: TokenInfo,
+    tokenType: TokenTypeMap[keyof TokenTypeMap],
+    tokenAddress: string,
     selfAmount: BigNumber,
     peerAmount: BigNumber
   ): Promise<string> {
     const selfAddress = await this.provider.getSigner().getAddress();
     const peerAddress = ethers.utils.getAddress(this.config.ospEthAddress);
 
-    const existingChannel = await this.db.paymentChannels.get({ peerAddress });
-    if (existingChannel) {
-      return existingChannel.channelId;
+    // TODO(dominator008): Revisit this logic and maybe allow multiple channels
+    // per (selfAddress, peerAddress, tokenAddress) tuple
+    const existingChannels = await this.db.paymentChannels
+      .where({
+        selfAddress,
+        peerAddress,
+        tokenAddress
+      })
+      .toArray();
+    if (existingChannels.length > 0) {
+      return existingChannels[0].channelId;
     }
 
     const selfAddressBytes = ethers.utils.arrayify(selfAddress);
@@ -115,6 +125,7 @@ export class OpenChannelProcessor {
     }
     const initializer = new PaymentChannelInitializer();
     const distribution = new TokenDistribution();
+    const tokenInfo = typeUtils.createTokenInfo(tokenType, tokenAddress);
     distribution.setToken(tokenInfo);
     distribution.setDistributionList([lowDistribution, highDistribution]);
     initializer.setInitDistribution(distribution);
@@ -136,7 +147,7 @@ export class OpenChannelProcessor {
 
     const response = await this.messageManager.openChannel(request);
     return this.sendOpenChannelTx(
-      tokenInfo,
+      tokenType,
       selfAmount,
       response,
       selfAddressLower
@@ -144,7 +155,7 @@ export class OpenChannelProcessor {
   }
 
   private async sendOpenChannelTx(
-    tokenInfo: TokenInfo,
+    tokenType: TokenTypeMap[keyof TokenTypeMap],
     selfAmount: BigNumber,
     response: OpenChannelResponse,
     selfAddressLower: boolean
@@ -167,12 +178,12 @@ export class OpenChannelProcessor {
 
     const celerLedger = new ethers.Contract(
       this.config.celerLedgerAddress,
-      String(celerLedgerAbi),
+      JSON.stringify(celerLedgerAbi),
       this.provider.getSigner()
     );
 
     const overrides: TransactionRequest = {};
-    if (tokenInfo.getTokenType() === TokenType.ETH) {
+    if (tokenType === TokenType.ETH) {
       overrides.value = selfAmount;
     }
 
@@ -219,6 +230,7 @@ export class OpenChannelProcessor {
     const tokenAddress: string = values.tokenAddress;
     const channel = new PaymentChannel(
       channelId,
+      selfAddress,
       peerAddress,
       tokenType,
       tokenAddress

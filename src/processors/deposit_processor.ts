@@ -34,7 +34,7 @@ import { BigNumber, LogDescription } from 'ethers/utils';
 import celerLedgerAbi from '../abi/celer_ledger.json';
 import { Config } from '../config';
 import { Database } from '../data/database';
-import { TokenInfo, TokenType } from '../protobufs/entity_pb';
+import { TokenInfo, TokenType, TokenTypeMap } from '../protobufs/entity_pb';
 import * as errorUtils from '../utils/errors';
 
 export class DepositProcessor {
@@ -50,7 +50,7 @@ export class DepositProcessor {
 
   async deposit(
     channelId: string,
-    tokenInfo: TokenInfo,
+    tokenType: TokenTypeMap[keyof TokenTypeMap],
     amount: string
   ): Promise<string> {
     const db = this.db;
@@ -60,25 +60,25 @@ export class DepositProcessor {
     }
     return this.sendDepositTx(
       channelId,
-      tokenInfo,
+      tokenType,
       ethers.utils.bigNumberify(amount)
     );
   }
 
   private async sendDepositTx(
     channelId: string,
-    tokenInfo: TokenInfo,
+    tokenType: TokenTypeMap[keyof TokenTypeMap],
     amount: BigNumber
   ): Promise<string> {
     const signer = this.provider.getSigner();
     const celerLedger = new ethers.Contract(
       this.config.celerLedgerAddress,
-      String(celerLedgerAbi),
+      JSON.stringify(celerLedgerAbi),
       signer
     );
 
     const overrides: TransactionRequest = {};
-    if (tokenInfo.getTokenType() === TokenType.ETH) {
+    if (tokenType === TokenType.ETH) {
       overrides.value = amount;
     }
 

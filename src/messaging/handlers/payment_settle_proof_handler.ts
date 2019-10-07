@@ -60,6 +60,7 @@ export class PaymentSettleProofHandler {
     }
     const db = this.db;
     const paymentSettlementInfos: PaymentSettlementInfo[] = [];
+    let channelId: string;
     for (const settledPayment of settledPaysList) {
       const paymentId = ethers.utils.hexlify(
         settledPayment.getSettledPayId_asU8()
@@ -68,7 +69,14 @@ export class PaymentSettleProofHandler {
       const reason = settledPayment.getReason();
       const payment = await db.payments.get(paymentId);
       if (!payment) {
-        continue;
+        return;
+      }
+      const currChannelId = payment.outgoingChannelId;
+      if (!channelId) {
+        channelId = currChannelId;
+      } else if (currChannelId !== channelId) {
+        // Can't settle payments from different channels
+        return;
       }
       const paymentSettlementInfo = {
         payment,
@@ -93,9 +101,10 @@ export class PaymentSettleProofHandler {
           break;
         default:
       }
-      await this.paymentSettleRequestSender.sendPaymentSettleRequests(
-        paymentSettlementInfos
-      );
     }
+    await this.paymentSettleRequestSender.sendPaymentSettleRequests(
+      channelId,
+      paymentSettlementInfos
+    );
   }
 }

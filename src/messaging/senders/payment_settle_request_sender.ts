@@ -67,7 +67,10 @@ export class PaymentSettleRequestSender {
     this.peerAddress = peerAddress;
   }
 
-  async sendPaymentSettleRequests(settlementInfos: PaymentSettlementInfo[]) {
+  async sendPaymentSettleRequests(
+    channelId: string,
+    settlementInfos: PaymentSettlementInfo[]
+  ) {
     const db = this.db;
     const payments = settlementInfos.map(info => info.payment);
     const settlementAmounts = settlementInfos.map(
@@ -77,7 +80,11 @@ export class PaymentSettleRequestSender {
     const [
       signedSimpleState,
       baseSeqNum
-    ] = await this.getUpdatedSignedSimplexState(payments, settlementAmounts);
+    ] = await this.getUpdatedSignedSimplexState(
+      channelId,
+      payments,
+      settlementAmounts
+    );
     const paymentCount = payments.length;
     const settledPayments = new Array(paymentCount);
     for (let i = 0; i < paymentCount; i++) {
@@ -108,12 +115,12 @@ export class PaymentSettleRequestSender {
   }
 
   private async getUpdatedSignedSimplexState(
+    channelId: string,
     payments: Payment[],
     settlementAmounts: Uint8Array[]
   ): Promise<[SignedSimplexState, number]> {
     const db = this.db;
-    const peerAddress = this.peerAddress;
-    const channel = await db.paymentChannels.get({ peerAddress });
+    const channel = await db.paymentChannels.get(channelId);
     if (channel.status !== PaymentChannelStatus.OPEN) {
       throw errorUtils.paymentChannelNotOpen(channel.channelId);
     }
