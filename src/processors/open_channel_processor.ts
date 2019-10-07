@@ -201,17 +201,17 @@ export class OpenChannelProcessor {
     const values = log.values;
     const addresses: string[] = values.peerAddrs;
     const initialDeposits: BigNumber[] = values.initialDeposits;
-    let myDeposit: BigNumber;
+    let selfDeposit: BigNumber;
     let peerDeposit: BigNumber;
     let peerAddress: string;
     const selfAddress = await this.provider.getSigner().getAddress();
     if (addresses[0] === selfAddress) {
       peerAddress = addresses[1];
-      myDeposit = initialDeposits[0];
+      selfDeposit = initialDeposits[0];
       peerDeposit = initialDeposits[1];
     } else {
       peerAddress = addresses[0];
-      myDeposit = initialDeposits[1];
+      selfDeposit = initialDeposits[1];
       peerDeposit = initialDeposits[0];
     }
     const channelId: string = values.channelId;
@@ -225,7 +225,7 @@ export class OpenChannelProcessor {
     );
     const zeroBytes = ethers.utils.arrayify(ethers.constants.Zero);
     const depositWithdrawal = new DepositWithdrawal(
-      ethers.utils.arrayify(myDeposit),
+      ethers.utils.arrayify(selfDeposit),
       zeroBytes,
       ethers.utils.arrayify(peerDeposit),
       zeroBytes

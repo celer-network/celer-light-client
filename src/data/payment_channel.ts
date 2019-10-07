@@ -94,9 +94,9 @@ export class PaymentChannel {
     );
 
     const depositWithdrawal = this.depositWithdrawal;
-    const myDeposit = ethers.utils.bigNumberify(depositWithdrawal.myDeposit);
+    const myDeposit = ethers.utils.bigNumberify(depositWithdrawal.selfDeposit);
     const myWithdrawal = ethers.utils.bigNumberify(
-      depositWithdrawal.myWithdrawal
+      depositWithdrawal.selfWithdrawal
     );
     const peerDeposit = ethers.utils.bigNumberify(
       depositWithdrawal.peerDeposit
@@ -104,8 +104,10 @@ export class PaymentChannel {
     const peerWithdrawal = ethers.utils.bigNumberify(
       depositWithdrawal.peerWithdrawal
     );
-    const myPendingWithdrawal = depositWithdrawal.myPendingWithdrawal
-      ? ethers.utils.bigNumberify(depositWithdrawal.myPendingWithdrawal.amount)
+    const myPendingWithdrawal = depositWithdrawal.selfPendingWithdrawal
+      ? ethers.utils.bigNumberify(
+          depositWithdrawal.selfPendingWithdrawal.amount
+        )
       : ethers.utils.bigNumberify(0);
     const peerPendingWithdrawal = depositWithdrawal.peerPendingWithdrawal
       ? ethers.utils.bigNumberify(

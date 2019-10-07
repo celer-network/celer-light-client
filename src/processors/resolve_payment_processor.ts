@@ -44,6 +44,7 @@ export class ResolvePaymentProcessor {
   private readonly provider: JsonRpcProvider;
   private readonly config: Config;
 
+  // TODO(dominator008): Complete this
   constructor(provider: JsonRpcProvider, config: Config) {
     this.provider = provider;
     this.config = config;

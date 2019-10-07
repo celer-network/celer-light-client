@@ -24,21 +24,21 @@
  */
 
 export class DepositWithdrawal {
-  myDeposit: Uint8Array;
-  myWithdrawal: Uint8Array;
+  selfDeposit: Uint8Array;
+  selfWithdrawal: Uint8Array;
   peerDeposit: Uint8Array;
   peerWithdrawal: Uint8Array;
-  myPendingWithdrawal: PendingWithdrawal;
+  selfPendingWithdrawal: PendingWithdrawal;
   peerPendingWithdrawal: PendingWithdrawal;
 
   constructor(
-    myDeposit: Uint8Array,
-    myWithdrawal: Uint8Array,
+    selfDeposit: Uint8Array,
+    selfWithdrawal: Uint8Array,
     peerDeposit: Uint8Array,
     peerWithdrawal: Uint8Array
   ) {
-    this.myDeposit = myDeposit;
-    this.myWithdrawal = myWithdrawal;
+    this.selfDeposit = selfDeposit;
+    this.selfWithdrawal = selfWithdrawal;
     this.peerDeposit = peerDeposit;
     this.peerWithdrawal = peerWithdrawal;
   }

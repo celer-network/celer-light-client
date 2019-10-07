@@ -24,5 +24,6 @@
  */
 
 export class PaymentSettleProofSender {
+  // TODO(dominator008): Implement this
   constructor() {}
 }

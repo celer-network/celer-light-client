@@ -112,10 +112,10 @@ export class DepositProcessor {
       const channel = await db.paymentChannels.get(channelId);
       const depositWithdrawal = channel.depositWithdrawal;
       if (addresses[0] === (await this.provider.getSigner().getAddress())) {
-        depositWithdrawal.myDeposit = deposits[0];
+        depositWithdrawal.selfDeposit = deposits[0];
         depositWithdrawal.peerDeposit = deposits[1];
       } else {
-        depositWithdrawal.myDeposit = deposits[1];
+        depositWithdrawal.selfDeposit = deposits[1];
         depositWithdrawal.peerDeposit = deposits[0];
       }
       await db.paymentChannels.put(channel);
