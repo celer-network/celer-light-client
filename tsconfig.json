@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2020",
     "module": "es2015",
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
@@ -10,8 +10,7 @@
     "esModuleInterop": true,
     "declaration": true,
     "declarationDir": "dist",
-    "outDir": "tsout",
-    "lib": ["es2018", "dom"]
+    "outDir": "tsout"
   },
   "include": ["src/**/*", "demo/**/*"]
 }
