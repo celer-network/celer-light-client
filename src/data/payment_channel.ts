@@ -175,21 +175,6 @@ export class PaymentChannel {
     signedSimplexState.setSimplexState(simplexState.serializeBinary());
   }
 
-  static async storeOutgoingCosignedSimplexState(
-    cosignedState: SignedSimplexState,
-    db: Database,
-    channelId: string
-  ) {
-    await db.transaction('rw', db.paymentChannels, async () => {
-      const channel = await db.paymentChannels.get(channelId);
-      if (!channel) {
-        return;
-      }
-      channel.setOutgoingSignedSimplexState(cosignedState);
-      await db.paymentChannels.put(channel);
-    });
-  }
-
   static isSeqNumValid(
     stored: number,
     receivedBase: number,

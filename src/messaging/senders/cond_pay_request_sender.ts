@@ -179,6 +179,7 @@ export class CondPayRequestSender {
       simplexState
     );
     await this.db.payments.add(payment);
+
     return [signedSimplexState, baseSeqNum];
   }
 

@@ -43,11 +43,15 @@ interface MessageHandler {
 export class MessageManager {
   private readonly rpcClient: WebProxyRpcClient;
   private readonly handlers: Map<CelerMsg.MessageCase, MessageHandler>;
+  private readonly messageQueue: CelerMsg[];
   private metadata: grpc.Metadata;
+  private dispatcherSpawned: boolean;
 
   constructor(config: Config) {
     this.rpcClient = new WebProxyRpcClient(config.ospNetworkAddress);
     this.handlers = new Map();
+    this.messageQueue = [];
+    this.dispatcherSpawned = false;
   }
 
   async createSession(): Promise<void> {
@@ -92,12 +96,25 @@ export class MessageManager {
 
   subscribeMessages(auth: AuthReq): void {
     const stream = this.rpcClient.subscribeMessages(auth, this.metadata);
-    stream.on('data', async (message: CelerMsg) => {
-      await this.handlers.get(message.getMessageCase()).handle(message);
+    stream.on('data', (message: CelerMsg) => {
+      this.messageQueue.push(message);
+      if (!this.dispatcherSpawned) {
+        this.dispatcherSpawned = true;
+        this.dispatchMessages();
+      }
     });
   }
 
   setHandler(messageCase: CelerMsg.MessageCase, handler: MessageHandler): void {
     this.handlers.set(messageCase, handler);
+  }
+
+  private async dispatchMessages() {
+    const messageQueue = this.messageQueue;
+    while (messageQueue.length > 0) {
+      const message = messageQueue.shift();
+      await this.handlers.get(message.getMessageCase()).handle(message);
+    }
+    this.dispatcherSpawned = false;
   }
 }

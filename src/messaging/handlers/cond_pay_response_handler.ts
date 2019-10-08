@@ -82,18 +82,24 @@ export class CondPayResponseHandler {
     }
 
     if (response.hasError()) {
-      switch (response.getError().getCode()) {
-        case ErrCode.INVALID_SEQ_NUM:
-          await PaymentChannel.storeOutgoingCosignedSimplexState(
-            receivedSignedSimplexState,
-            db,
-            channelId
-          );
-        default:
-      }
-      // Mark all PEER_FROM_SIGNED_PENDING payments as FAILED for now
-      // TODO(dominator008): Revisit this
       await db.transaction('rw', db.paymentChannels, db.payments, async () => {
+        const channel = await db.paymentChannels.get(channelId);
+        if (!channel) {
+          return;
+        }
+        const storedSimplexState = SimplexPaymentChannel.deserializeBinary(
+          channel.getOutgoingSignedSimplexState().getSimplexState_asU8()
+        );
+        // Verify that the received sequence number is not lower than the stored
+        // one
+        if (receivedSimplexState.getSeqNum() < storedSimplexState.getSeqNum()) {
+          return;
+        }
+        channel.setOutgoingSignedSimplexState(receivedSignedSimplexState);
+        await db.paymentChannels.put(channel);
+
+        // Mark all PEER_FROM_SIGNED_PENDING payments as FAILED for now
+        // TODO(dominator008): Revisit this
         const payments = await db.payments
           .where({
             status: PaymentStatus.PEER_FROM_SIGNED_PENDING
