@@ -121,6 +121,7 @@ export class Celer {
       provider,
       config
     );
+    this.depositProcessor = new DepositProcessor(db, provider, config);
     this.sendPaymentProcessor = new SendPaymentProcessor(condPayRequestSender);
     const resolvePaymentProcessor = new ResolvePaymentProcessor(
       provider,

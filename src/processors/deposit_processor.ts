@@ -34,18 +34,18 @@ import { BigNumber, LogDescription } from 'ethers/utils';
 import celerLedgerAbi from '../abi/celer_ledger.json';
 import { Config } from '../config';
 import { Database } from '../data/database';
-import { TokenInfo, TokenType, TokenTypeMap } from '../protobufs/entity_pb';
+import { TokenType, TokenTypeMap } from '../protobufs/entity_pb';
 import * as errorUtils from '../utils/errors';
 
 export class DepositProcessor {
   private readonly db: Database;
-  private readonly config: Config;
   private readonly provider: JsonRpcProvider;
+  private readonly config: Config;
 
-  constructor(db: Database, config: Config, provider: JsonRpcProvider) {
+  constructor(db: Database, provider: JsonRpcProvider, config: Config) {
     this.db = db;
-    this.config = config;
     this.provider = provider;
+    this.config = config;
   }
 
   async deposit(
@@ -78,14 +78,17 @@ export class DepositProcessor {
     );
 
     const overrides: TransactionRequest = {};
+    let transferFromAmount = amount;
     if (tokenType === TokenType.ETH) {
       overrides.value = amount;
+      transferFromAmount = ethers.utils.bigNumberify(0);
     }
 
+    const selfAddress = await signer.getAddress();
     const tx: TransactionResponse = await celerLedger.deposit(
       ethers.utils.arrayify(channelId),
       await signer.getAddress(),
-      amount,
+      transferFromAmount,
       overrides
     );
     const receipt = await tx.wait();
@@ -95,14 +98,20 @@ export class DepositProcessor {
     const ledgerInterface = celerLedger.interface;
     for (const log of receipt.logs) {
       if (log.topics[0] === ledgerInterface.events.Deposit.topic) {
-        await this.processDepositEvent(ledgerInterface.parseLog(log));
+        await this.processDepositEvent(
+          ledgerInterface.parseLog(log),
+          selfAddress
+        );
         break;
       }
     }
     return tx.hash;
   }
 
-  private async processDepositEvent(log: LogDescription): Promise<void> {
+  private async processDepositEvent(
+    log: LogDescription,
+    selfAddress: string
+  ): Promise<void> {
     const values = log.values;
     const channelId = ethers.utils.hexlify(values.channelId);
     const addresses = values.peerAddrs;
@@ -111,7 +120,7 @@ export class DepositProcessor {
     return db.transaction('rw', db.paymentChannels, async () => {
       const channel = await db.paymentChannels.get(channelId);
       const depositWithdrawal = channel.depositWithdrawal;
-      if (addresses[0] === (await this.provider.getSigner().getAddress())) {
+      if (addresses[0] === selfAddress) {
         depositWithdrawal.selfDeposit = deposits[0];
         depositWithdrawal.peerDeposit = deposits[1];
       } else {
