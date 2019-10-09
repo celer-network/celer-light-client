@@ -99,11 +99,15 @@ export class CondPayRequestHandler {
     const condPayResponse = new CondPayResponse();
     if (valid) {
       // Send CondPayResponse and CondPayReceipt
-      const selfSignature = await this.signer.signHash(
+      const selfSignatureForSimplexState = await this.signer.signHash(
         receivedSimplexStateBytes
       );
-      const selfSignatureBytes = ethers.utils.arrayify(selfSignature);
-      receivedSignedSimplexState.setSigOfPeerTo(selfSignatureBytes);
+      const selfSignatureForSimplexStateBytes = ethers.utils.arrayify(
+        selfSignatureForSimplexState
+      );
+      receivedSignedSimplexState.setSigOfPeerTo(
+        selfSignatureForSimplexStateBytes
+      );
 
       const db = this.db;
       const channel = await db.paymentChannels.get(receivedChannelId);
@@ -127,7 +131,13 @@ export class CondPayRequestHandler {
       const receiptMessage = new CelerMsg();
       receiptMessage.setToAddr(conditionalPay.getSrc_asU8());
       const condPayReceipt = new CondPayReceipt();
-      condPayReceipt.setPayDestSig(selfSignatureBytes);
+      const selfSignatureForConditionalPay = await this.signer.signHash(
+        conditionalPay.serializeBinary()
+      );
+      const selfSignatureForConditionalPayBytes = ethers.utils.arrayify(
+        selfSignatureForConditionalPay
+      );
+      condPayReceipt.setPayDestSig(selfSignatureForConditionalPayBytes);
       condPayReceipt.setPayId(ethers.utils.arrayify(paymentId));
       receiptMessage.setCondPayReceipt(condPayReceipt);
       await this.messageManager.sendMessage(receiptMessage);
@@ -137,6 +147,7 @@ export class CondPayRequestHandler {
         condPayResponse.setStateCosigned(lastCosignedSimplexState);
       }
       const errorResponse = new ErrorResponse();
+      errorResponse.setSeq(receivedSimplexState.getSeqNum());
       if (errCode) {
         errorResponse.setCode(errCode);
       }
@@ -168,12 +179,15 @@ export class CondPayRequestHandler {
       channel,
       storedSignedSimplexState,
       storedSimplexState
-    } = await PaymentChannel.verifyChannelExistence(db, receivedChannelId);
+    } = await PaymentChannel.verifyIncomingChannelExistence(
+      db,
+      receivedChannelId
+    );
     if (!existenceResult.valid) {
       return { result: existenceResult };
     }
 
-    const commonResult = PaymentChannel.verifyCommonSimplexStates(
+    const commonResult = PaymentChannel.verifyIncomingCommonSimplexStates(
       channel,
       this.peerAddress,
       receivedChannelId,
@@ -295,13 +309,10 @@ export class CondPayRequestHandler {
     }
 
     // Verify max number of pending payments
-    const storedPendingPaymentIds = storedSimplexState
-      .getPendingPayIds()
-      .getPayIdsList();
-    const receivedPendingPaymentIds = receivedSimplexState
-      .getPendingPayIds()
-      .getPayIdsList();
-    if (receivedPendingPaymentIds.length > this.config.maxPendingPayments) {
+    const storedPendingPayIds = storedSimplexState.getPendingPayIds();
+    const receivedPendingPayIds = receivedSimplexState.getPendingPayIds();
+    const receivedPendingPayIdsList = receivedPendingPayIds.getPayIdsList_asU8();
+    if (receivedPendingPayIdsList.length > this.config.maxPendingPayments) {
       return {
         result: {
           valid: false,
@@ -315,9 +326,9 @@ export class CondPayRequestHandler {
     const [
       removedPendingPaymentIds,
       addedPendingPaymentIds
-    ] = Payment.getListDifferences(
-      storedPendingPaymentIds,
-      receivedPendingPaymentIds
+    ] = Payment.getPaymentIdListDifferences(
+      storedPendingPayIds,
+      receivedPendingPayIds
     );
     // Only allow one added pending payment and no removed payments
     if (

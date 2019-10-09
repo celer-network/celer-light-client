@@ -81,7 +81,7 @@ export class RevealSecretHandler {
     const signature = await this.signer.signHash(secret);
     const revealSecretAck = new RevealSecretAck();
     revealSecretAck.setPayId(paymentIdBytes);
-    revealSecretAck.setPayDestSecretSig(signature);
+    revealSecretAck.setPayDestSecretSig(ethers.utils.arrayify(signature));
     const revealSecretAckMessage = new CelerMsg();
     revealSecretAckMessage.setToAddr(conditionalPay.getSrc_asU8());
     revealSecretAckMessage.setRevealSecretAck(revealSecretAck);

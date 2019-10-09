@@ -24,9 +24,10 @@
  */
 
 import { ethers } from 'ethers';
+import { Message } from 'google-protobuf';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 
-import { ConditionalPay } from '../protobufs/entity_pb';
+import { ConditionalPay, PayIdList } from '../protobufs/entity_pb';
 
 export enum PaymentStatus {
   INITIAL = 0,
@@ -90,12 +91,48 @@ export class Payment {
     return ethers.utils.keccak256(packed);
   }
 
-  static getListDifferences(
-    a: Array<string | Uint8Array>,
-    b: Array<string | Uint8Array>
-  ) {
-    const onlyInA = a.filter(x => !b.includes(x));
-    const onlyInB = b.filter(x => !a.includes(x));
+  static getPaymentIdListDifferences(
+    a: PayIdList,
+    b: PayIdList
+  ): [Uint8Array[], Uint8Array[]] {
+    const aAsArrays = a.getPayIdsList_asU8();
+    const aAsStrings = a.getPayIdsList_asB64();
+    const bAsArrays = b.getPayIdsList_asU8();
+    const bAsStrings = b.getPayIdsList_asB64();
+    return Payment.getListDifferences(
+      aAsArrays,
+      aAsStrings,
+      bAsArrays,
+      bAsStrings
+    );
+  }
+
+  static getUint8ArrayListDifferences(
+    aAsArrays: Uint8Array[],
+    bAsArrays: Uint8Array[]
+  ): [Uint8Array[], Uint8Array[]] {
+    const aAsStrings = Message.bytesListAsB64(aAsArrays);
+    const bAsStrings = Message.bytesListAsB64(bAsArrays);
+    return Payment.getListDifferences(
+      aAsArrays,
+      aAsStrings,
+      bAsArrays,
+      bAsStrings
+    );
+  }
+
+  private static getListDifferences(
+    aAsArrays: Uint8Array[],
+    aAsStrings: string[],
+    bAsArrays: Uint8Array[],
+    bAsStrings: string[]
+  ): [Uint8Array[], Uint8Array[]] {
+    const onlyInA = aAsArrays.filter(
+      (_, i) => !bAsStrings.includes(aAsStrings[i])
+    );
+    const onlyInB = bAsArrays.filter(
+      (_, i) => !aAsStrings.includes(bAsStrings[i])
+    );
     return [onlyInA, onlyInB];
   }
 }

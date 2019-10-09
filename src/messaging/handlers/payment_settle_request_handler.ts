@@ -128,6 +128,7 @@ export class PaymentSettleRequestHandler {
         paymentSettleResponse.setStateCosigned(lastCosignedSimplexState);
       }
       const errorResponse = new ErrorResponse();
+      errorResponse.setSeq(receivedSimplexState.getSeqNum());
       if (errCode) {
         errorResponse.setCode(errCode);
       }
@@ -158,12 +159,15 @@ export class PaymentSettleRequestHandler {
       channel,
       storedSignedSimplexState,
       storedSimplexState
-    } = await PaymentChannel.verifyChannelExistence(db, receivedChannelId);
+    } = await PaymentChannel.verifyIncomingChannelExistence(
+      db,
+      receivedChannelId
+    );
     if (!existenceResult.valid) {
       return { result: existenceResult };
     }
 
-    const commonResult = PaymentChannel.verifyCommonSimplexStates(
+    const commonResult = PaymentChannel.verifyIncomingCommonSimplexStates(
       channel,
       this.peerAddress,
       receivedChannelId,
@@ -181,24 +185,19 @@ export class PaymentSettleRequestHandler {
     }
 
     // Verify pending payment list
-    const storedPendingPaymentIds = storedSimplexState
-      .getPendingPayIds()
-      .getPayIdsList();
-    const receivedPendingPaymentIds = receivedSimplexState
-      .getPendingPayIds()
-      .getPayIdsList();
+    const storedPendingPayIds = storedSimplexState.getPendingPayIds();
+    const receivedPendingPayIds = receivedSimplexState.getPendingPayIds();
+    const storedPendingPayIdsList = storedPendingPayIds.getPayIdsList_asU8();
+    const receivedPendingPayIdsList = receivedPendingPayIds.getPayIdsList_asU8();
     const [
-      removedPendingPaymentIds,
-      addedPendingPaymentIds
-    ] = Payment.getListDifferences(
-      storedPendingPaymentIds,
-      receivedPendingPaymentIds
+      removedPendingPayIds,
+      addedPendingPayIds
+    ] = Payment.getPaymentIdListDifferences(
+      storedPendingPayIds,
+      receivedPendingPayIds
     );
     // Only allow removed pending payments
-    if (
-      addedPendingPaymentIds.length > 0 ||
-      removedPendingPaymentIds.length === 0
-    ) {
+    if (addedPendingPayIds.length > 0 || removedPendingPayIds.length === 0) {
       return {
         result: {
           valid: false,
@@ -216,7 +215,10 @@ export class PaymentSettleRequestHandler {
     const [
       paymentIdsOnlyInSettled,
       paymentIdsOnlyInRemoved
-    ] = Payment.getListDifferences(settledPaymentIds, removedPendingPaymentIds);
+    ] = Payment.getUint8ArrayListDifferences(
+      settledPaymentIds,
+      removedPendingPayIds
+    );
     if (
       paymentIdsOnlyInSettled.length > 0 ||
       paymentIdsOnlyInRemoved.length > 0
@@ -448,5 +450,7 @@ export class PaymentSettleRequestHandler {
           };
       }
     }
+
+    return { valid: true };
   }
 }

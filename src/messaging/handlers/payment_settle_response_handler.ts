@@ -49,6 +49,9 @@ export class PaymentSettleResponseHandler {
     const selfAddress = await this.signer.provider.getSigner().getAddress();
     const peerAddress = this.peerAddress;
     const receivedSignedSimplexState = response.getStateCosigned();
+    if (!receivedSignedSimplexState) {
+      return;
+    }
     const [
       receivedSimplexState,
       receivedSimplexStateBytes

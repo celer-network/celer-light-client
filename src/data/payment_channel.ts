@@ -175,15 +175,7 @@ export class PaymentChannel {
     signedSimplexState.setSimplexState(simplexState.serializeBinary());
   }
 
-  static isSeqNumValid(
-    stored: number,
-    receivedBase: number,
-    receivedProposed: number
-  ): boolean {
-    return stored === receivedBase && receivedProposed > stored;
-  }
-
-  static async verifyChannelExistence(
+  static async verifyIncomingChannelExistence(
     db: Database,
     receivedChannelId: string
   ): Promise<{
@@ -223,7 +215,7 @@ export class PaymentChannel {
     return [simplexState, simplexStateBytes];
   }
 
-  static verifyCommonSimplexStates(
+  static verifyIncomingCommonSimplexStates(
     channel: PaymentChannel,
     peerAddress: string,
     receivedChannelId: string,
@@ -273,8 +265,8 @@ export class PaymentChannel {
     if (
       !PaymentChannel.isSeqNumValid(
         storedSimplexState.getSeqNum(),
-        receivedSimplexState.getSeqNum(),
-        receivedBaseSeqNum
+        receivedBaseSeqNum,
+        receivedSimplexState.getSeqNum()
       )
     ) {
       return {
@@ -282,5 +274,15 @@ export class PaymentChannel {
         errCode: ErrCode.INVALID_SEQ_NUM
       };
     }
+
+    return { valid: true };
+  }
+
+  private static isSeqNumValid(
+    stored: number,
+    receivedBase: number,
+    receivedProposed: number
+  ): boolean {
+    return stored === receivedBase && receivedProposed > stored;
   }
 }

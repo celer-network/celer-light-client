@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 
 import { Celer, PaymentStatus, TokenType } from '../src/index';
-import config from './local_config.json';
+import config from './ropsten_config.json';
 
 declare global {
   interface Window {
@@ -10,6 +10,7 @@ declare global {
     client: Celer;
     channelId: string;
     openChannel: Function;
+    deposit: Function;
     sendPayment: Function;
     updateBalance: Function;
   }
@@ -31,8 +32,8 @@ function openChannel(): void {
     .openPaymentChannel(
       TokenType.ETH,
       ethers.constants.AddressZero,
-      '100',
-      '100'
+      '50000000000000000',
+      '50000000000000000'
     )
     .then(channelId => {
       document.getElementById(
@@ -40,6 +41,13 @@ function openChannel(): void {
       ).textContent = `Channel ${channelId} opened`;
       window.channelId = channelId;
     });
+}
+
+function deposit(): void {
+  window.client.deposit(window.channelId, TokenType.ETH, '100').then(_ => {
+    document.getElementById('deposit').textContent = `Deposited 100 wei`;
+    updateBalance();
+  });
 }
 
 function sendPayment(): void {
@@ -50,7 +58,7 @@ function sendPayment(): void {
     .sendPayment(
       TokenType.ETH,
       ethers.constants.AddressZero,
-      config.ospEthAddress,
+      (document.getElementById('recipient') as HTMLInputElement).value,
       '1'
     )
     .then(id => {
@@ -91,5 +99,6 @@ function sendPayment(): void {
 })();
 
 window.openChannel = openChannel;
+window.deposit = deposit;
 window.sendPayment = sendPayment;
 window.updateBalance = updateBalance;
