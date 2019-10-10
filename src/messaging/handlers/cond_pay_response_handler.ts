@@ -25,28 +25,28 @@
 
 import { ethers } from 'ethers';
 
-import { CustomSigner } from '../../crypto/custom_signer';
+import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
-import { Payment, PaymentStatus } from '../../data/payment';
+import { PaymentStatus } from '../../data/payment';
 import { PaymentChannel } from '../../data/payment_channel';
 import { SimplexPaymentChannel } from '../../protobufs/entity_pb';
-import { CelerMsg, ErrCode } from '../../protobufs/message_pb';
+import { CelerMsg } from '../../protobufs/message_pb';
 
 export class CondPayResponseHandler {
   private readonly db: Database;
-  private readonly signer: CustomSigner;
+  private readonly cryptoManager: CryptoManager;
   private readonly peerAddress: string;
 
-  constructor(db: Database, signer: CustomSigner, peerAddress: string) {
+  constructor(db: Database, cryptoManager: CryptoManager, peerAddress: string) {
     this.db = db;
-    this.signer = signer;
+    this.cryptoManager = cryptoManager;
     this.peerAddress = peerAddress;
   }
 
   async handle(message: CelerMsg): Promise<void> {
     const response = message.getCondPayResponse();
     const db = this.db;
-    const selfAddress = await this.signer.provider.getSigner().getAddress();
+    const selfAddress = await this.cryptoManager.signer.getAddress();
     const peerAddress = this.peerAddress;
     const receivedSignedSimplexState = response.getStateCosigned();
     if (!receivedSignedSimplexState) {
@@ -70,12 +70,12 @@ export class CondPayResponseHandler {
       receivedSignedSimplexState.getSigOfPeerTo_asU8()
     );
     if (
-      !CustomSigner.isSignatureValid(
+      !CryptoManager.isSignatureValid(
         peerAddress,
         receivedSimplexStateBytes,
         peerSignature
       ) ||
-      !CustomSigner.isSignatureValid(
+      !CryptoManager.isSignatureValid(
         selfAddress,
         receivedSimplexStateBytes,
         selfSignature

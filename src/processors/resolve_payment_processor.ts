@@ -28,7 +28,7 @@ import { JsonRpcProvider } from 'ethers/providers';
 import { BigNumber } from 'ethers/utils';
 
 import payRegistryAbi from '../abi/pay_registry.json';
-import { Config } from '../config';
+import { ContractsInfo } from '../contracts_info.js';
 
 export class OnChainPaymentInfo {
   readonly amount: BigNumber;
@@ -42,17 +42,17 @@ export class OnChainPaymentInfo {
 
 export class ResolvePaymentProcessor {
   private readonly provider: JsonRpcProvider;
-  private readonly config: Config;
+  private readonly contractsInfo: ContractsInfo;
 
   // TODO(dominator008): Complete this
-  constructor(provider: JsonRpcProvider, config: Config) {
+  constructor(provider: JsonRpcProvider, contractsInfo: ContractsInfo) {
     this.provider = provider;
-    this.config = config;
+    this.contractsInfo = contractsInfo;
   }
 
   async getOnChainPaymentInfo(paymentId: string): Promise<OnChainPaymentInfo> {
     const payRegistry = new ethers.Contract(
-      this.config.payRegistryAddress,
+      this.contractsInfo.payRegistryAddress,
       JSON.stringify(payRegistryAbi),
       this.provider
     );

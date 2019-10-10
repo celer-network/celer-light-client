@@ -1,7 +1,8 @@
 import { ethers } from 'ethers';
 
 import { Celer, PaymentStatus, TokenType } from '../src/index';
-import config from './ropsten_config.json';
+import config from './local_config.json';
+import contractsInfo from './local_contracts.json';
 
 declare global {
   interface Window {
@@ -94,7 +95,12 @@ function sendPayment(): void {
   const provider = new ethers.providers.Web3Provider(
     window['ethereum'] || window.web3.currentProvider
   );
-  const client = await Celer.create(config, provider);
+  const client = await Celer.create(
+    provider,
+    provider.getSigner(),
+    contractsInfo,
+    config
+  );
   window.client = client;
 })();
 

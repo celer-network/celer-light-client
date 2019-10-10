@@ -4,7 +4,8 @@ import { BigNumber } from 'ethers/utils';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 
 import { Config } from '../../config';
-import { CustomSigner } from '../../crypto/custom_signer';
+import { ContractsInfo } from '../../contracts_info';
+import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
 import { Payment, PaymentStatus } from '../../data/payment';
 import {
@@ -34,22 +35,23 @@ import { MessageManager } from '../message_manager';
 export class CondPayRequestSender {
   private readonly db: Database;
   private readonly messageManager: MessageManager;
-  private readonly signer: CustomSigner;
+  private readonly cryptoManager: CryptoManager;
   private readonly provider: JsonRpcProvider;
+  private readonly contractsInfo: ContractsInfo;
   private readonly config: Config;
   private readonly peerAddress: string;
 
   constructor(
     db: Database,
     messageManager: MessageManager,
-    signer: CustomSigner,
-    provider: JsonRpcProvider,
+    cryptoManager: CryptoManager,
+    contractsInfo: ContractsInfo,
     config: Config
   ) {
     this.db = db;
     this.messageManager = messageManager;
-    this.signer = signer;
-    this.provider = provider;
+    this.cryptoManager = cryptoManager;
+    this.contractsInfo = contractsInfo;
     this.config = config;
     this.peerAddress = ethers.utils.getAddress(this.config.ospEthAddress);
   }
@@ -78,7 +80,7 @@ export class CondPayRequestSender {
     const resolveDeadline = (await this.provider.getBlockNumber()) + timeout;
     const conditionalPay = new ConditionalPay();
     conditionalPay.setSrc(
-      ethers.utils.arrayify(await this.provider.getSigner().getAddress())
+      ethers.utils.arrayify(await this.cryptoManager.signer.getAddress())
     );
     conditionalPay.setDest(destinationBytes);
     conditionalPay.setConditionsList(conditions);
@@ -93,14 +95,14 @@ export class CondPayRequestSender {
 
     conditionalPay.setPayResolver(
       ethers.utils.arrayify(
-        ethers.utils.getAddress(this.config.payResolverAddress)
+        ethers.utils.getAddress(this.contractsInfo.payResolverAddress)
       )
     );
     conditionalPay.setPayTimestamp(CondPayRequestSender.getPayTimestamp());
     const paymentId = Payment.calculatePaymentId(conditionalPay);
     const paymentBytes = conditionalPay.serializeBinary();
     const db = this.db;
-    const selfAddress = await this.signer.provider.getSigner().getAddress();
+    const selfAddress = await this.cryptoManager.signer.getAddress();
     const peerAddress = this.peerAddress;
     const channels = await db.paymentChannels
       .where({
@@ -174,7 +176,7 @@ export class CondPayRequestSender {
     simplexState.setSeqNum(baseSeqNum + 1);
 
     await PaymentChannel.signUpdatedSimplexState(
-      this.signer,
+      this.cryptoManager,
       signedSimplexState,
       simplexState
     );

@@ -25,7 +25,7 @@
 
 import { ethers } from 'ethers';
 
-import { CustomSigner } from '../crypto/custom_signer';
+import { CryptoManager } from '../crypto/crypto_manager';
 import { SimplexPaymentChannel, TokenTypeMap } from '../protobufs/entity_pb';
 import { ErrCode, SignedSimplexState } from '../protobufs/message_pb';
 import * as errorUtils from '../utils/errors';
@@ -162,13 +162,13 @@ export class PaymentChannel {
   }
 
   static async signUpdatedSimplexState(
-    signer: CustomSigner,
+    cryptoManager: CryptoManager,
     signedSimplexState: SignedSimplexState,
     simplexState: SimplexPaymentChannel
   ): Promise<void> {
     const simplexStateBytes = simplexState.serializeBinary();
     const sigOfPeerFromBytes = ethers.utils.arrayify(
-      await signer.signHash(simplexStateBytes)
+      await cryptoManager.signHash(simplexStateBytes)
     );
     signedSimplexState.setSimplexState(simplexStateBytes);
     signedSimplexState.setSigOfPeerFrom(sigOfPeerFromBytes);
@@ -238,7 +238,7 @@ export class PaymentChannel {
       receivedSignedSimplexState.getSigOfPeerFrom_asU8()
     );
     if (
-      !CustomSigner.isSignatureValid(
+      !CryptoManager.isSignatureValid(
         peerAddress,
         receivedSimplexStateBytes,
         peerSignature

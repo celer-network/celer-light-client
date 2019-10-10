@@ -25,7 +25,7 @@
 
 import { ethers } from 'ethers';
 
-import { CustomSigner } from '../../crypto/custom_signer';
+import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
 import { ConditionType } from '../../protobufs/entity_pb';
 import { CelerMsg, RevealSecret } from '../../protobufs/message_pb';
@@ -54,7 +54,7 @@ export class CondPayReceiptHandler {
     const destinationBytes = conditionalPay.getDest_asU8();
     const destination = typeUtils.bytesToAddress(destinationBytes);
     if (
-      !CustomSigner.isSignatureValid(
+      !CryptoManager.isSignatureValid(
         destination,
         conditionalPay.serializeBinary(),
         ethers.utils.splitSignature(receipt.getPayDestSig_asU8())

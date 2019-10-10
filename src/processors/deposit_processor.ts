@@ -23,29 +23,25 @@
  * IN THE SOFTWARE.
  */
 
-import { ethers } from 'ethers';
-import {
-  JsonRpcProvider,
-  TransactionRequest,
-  TransactionResponse
-} from 'ethers/providers';
+import { ethers, Signer } from 'ethers';
+import { TransactionRequest, TransactionResponse } from 'ethers/providers';
 import { BigNumber, LogDescription } from 'ethers/utils';
 
 import celerLedgerAbi from '../abi/celer_ledger.json';
-import { Config } from '../config';
+import { ContractsInfo } from '../contracts_info.js';
 import { Database } from '../data/database';
 import { TokenType, TokenTypeMap } from '../protobufs/entity_pb';
 import * as errorUtils from '../utils/errors';
 
 export class DepositProcessor {
   private readonly db: Database;
-  private readonly provider: JsonRpcProvider;
-  private readonly config: Config;
+  private readonly signer: Signer;
+  private readonly contractsInfo: ContractsInfo;
 
-  constructor(db: Database, provider: JsonRpcProvider, config: Config) {
+  constructor(db: Database, signer: Signer, contractsInfo: ContractsInfo) {
     this.db = db;
-    this.provider = provider;
-    this.config = config;
+    this.signer = signer;
+    this.contractsInfo = contractsInfo;
   }
 
   async deposit(
@@ -70,9 +66,9 @@ export class DepositProcessor {
     tokenType: TokenTypeMap[keyof TokenTypeMap],
     amount: BigNumber
   ): Promise<string> {
-    const signer = this.provider.getSigner();
+    const signer = this.signer;
     const celerLedger = new ethers.Contract(
-      this.config.celerLedgerAddress,
+      this.contractsInfo.celerLedgerAddress,
       JSON.stringify(celerLedgerAbi),
       signer
     );

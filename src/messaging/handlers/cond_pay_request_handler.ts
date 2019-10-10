@@ -26,7 +26,8 @@
 import { ethers } from 'ethers';
 
 import { Config } from '../../config';
-import { CustomSigner } from '../../crypto/custom_signer';
+import { ContractsInfo } from '../../contracts_info';
+import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
 import { Payment, PaymentStatus } from '../../data/payment';
 import { PaymentChannel } from '../../data/payment_channel';
@@ -49,19 +50,22 @@ import { MessageManager } from '../message_manager';
 export class CondPayRequestHandler {
   private readonly db: Database;
   private readonly messageManager: MessageManager;
-  private readonly signer: CustomSigner;
+  private readonly cryptoManager: CryptoManager;
+  private readonly contractsInfo: ContractsInfo;
   private readonly config: Config;
   private readonly peerAddress: string;
 
   constructor(
     db: Database,
     messageManager: MessageManager,
-    signer: CustomSigner,
+    cryptoManager: CryptoManager,
+    contractsInfo: ContractsInfo,
     config: Config
   ) {
     this.db = db;
     this.messageManager = messageManager;
-    this.signer = signer;
+    this.cryptoManager = cryptoManager;
+    this.contractsInfo = contractsInfo;
     this.config = config;
     this.peerAddress = ethers.utils.getAddress(this.config.ospEthAddress);
   }
@@ -85,7 +89,7 @@ export class CondPayRequestHandler {
       result: { valid, errCode, errReason },
       lastCosignedSimplexState
     } = await this.verifyCondPayRequest(
-      await this.signer.provider.getSigner().getAddress(),
+      await this.cryptoManager.signer.getAddress(),
       paymentId,
       receivedChannelId,
       request.getBaseSeq(),
@@ -99,7 +103,7 @@ export class CondPayRequestHandler {
     const condPayResponse = new CondPayResponse();
     if (valid) {
       // Send CondPayResponse and CondPayReceipt
-      const selfSignatureForSimplexState = await this.signer.signHash(
+      const selfSignatureForSimplexState = await this.cryptoManager.signHash(
         receivedSimplexStateBytes
       );
       const selfSignatureForSimplexStateBytes = ethers.utils.arrayify(
@@ -131,7 +135,7 @@ export class CondPayRequestHandler {
       const receiptMessage = new CelerMsg();
       receiptMessage.setToAddr(conditionalPay.getSrc_asU8());
       const condPayReceipt = new CondPayReceipt();
-      const selfSignatureForConditionalPay = await this.signer.signHash(
+      const selfSignatureForConditionalPay = await this.cryptoManager.signHash(
         conditionalPay.serializeBinary()
       );
       const selfSignatureForConditionalPayBytes = ethers.utils.arrayify(
@@ -264,7 +268,7 @@ export class CondPayRequestHandler {
     // Verify PayResolver address
     if (
       typeUtils.bytesToAddress(conditionalPay.getPayResolver_asU8()) !==
-      ethers.utils.getAddress(this.config.payResolverAddress)
+      ethers.utils.getAddress(this.contractsInfo.payResolverAddress)
     ) {
       return {
         result: {

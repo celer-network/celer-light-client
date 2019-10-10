@@ -23,14 +23,16 @@
  * IN THE SOFTWARE.
  */
 
-import { ethers } from 'ethers';
+import { ethers, Signer } from 'ethers';
 import { JsonRpcProvider } from 'ethers/providers';
 
-export class CustomSigner {
+export class CryptoManager {
   readonly provider: JsonRpcProvider;
+  readonly signer: Signer;
 
-  constructor(provider: JsonRpcProvider) {
+  constructor(provider: JsonRpcProvider, signer: Signer) {
     this.provider = provider;
+    this.signer = signer;
   }
 
   /**
@@ -42,8 +44,8 @@ export class CustomSigner {
    */
   async signHash(data: Uint8Array): Promise<string> {
     const hash = ethers.utils.arrayify(ethers.utils.keccak256(data));
-    const signature = await this.provider.getSigner().signMessage(hash);
-    return CustomSigner.joinSignature(ethers.utils.splitSignature(signature));
+    const signature = await this.signer.signMessage(hash);
+    return CryptoManager.joinSignature(ethers.utils.splitSignature(signature));
   }
 
   private static joinSignature(signature: ethers.utils.Signature): string {

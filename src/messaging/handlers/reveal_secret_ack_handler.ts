@@ -25,7 +25,7 @@
 
 import { ethers } from 'ethers';
 
-import { CustomSigner } from '../../crypto/custom_signer';
+import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
 import { ConditionType } from '../../protobufs/entity_pb';
 import { CelerMsg, PaymentSettleReason } from '../../protobufs/message_pb';
@@ -69,7 +69,7 @@ export class RevealSecretAckHandler {
       return;
     }
     if (
-      !CustomSigner.isSignatureValid(
+      !CryptoManager.isSignatureValid(
         typeUtils.bytesToAddress(conditionalPay.getDest_asU8()),
         hashLock.secret,
         ethers.utils.splitSignature(signatureBytes)

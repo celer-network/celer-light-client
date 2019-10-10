@@ -23,28 +23,35 @@
  * IN THE SOFTWARE.
  */
 
-import { ethers } from 'ethers';
+import { ethers, Signer } from 'ethers';
 import { JsonRpcProvider, TransactionResponse } from 'ethers/providers';
 import { BigNumber } from 'ethers/utils';
 
 import erc20Abi from '../abi/erc20.json';
 import { Config } from '../config.js';
+import { ContractsInfo } from '../contracts_info.js';
 
 const APPROVAL_AMOUNT = ethers.utils.parseEther('1e32');
 
 export class ApproveErc20Processor {
   private readonly provider: JsonRpcProvider;
-  private readonly config: Config;
+  private readonly signer: Signer;
+  private readonly contractsInfo: ContractsInfo;
 
-  constructor(provider: JsonRpcProvider, config: Config) {
+  constructor(
+    provider: JsonRpcProvider,
+    signer: Signer,
+    contractsInfo: ContractsInfo
+  ) {
     this.provider = provider;
-    this.config = config;
+    this.signer = signer;
+    this.contractsInfo = contractsInfo;
   }
 
   async approveIfNecessary(tokenAddress: string): Promise<string> {
-    const signer = this.provider.getSigner();
+    const signer = this.signer;
     const ledgerAddress = ethers.utils.getAddress(
-      this.config.celerLedgerAddress
+      this.contractsInfo.celerLedgerAddress
     );
     const tokenContract = new ethers.Contract(
       tokenAddress,

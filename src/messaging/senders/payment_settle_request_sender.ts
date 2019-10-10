@@ -25,7 +25,7 @@
 
 import { ethers } from 'ethers';
 
-import { CustomSigner } from '../../crypto/custom_signer';
+import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
 import { Payment, PaymentStatus } from '../../data/payment';
 import {
@@ -51,18 +51,18 @@ export interface PaymentSettlementInfo {
 
 export class PaymentSettleRequestSender {
   private readonly db: Database;
-  private readonly signer: CustomSigner;
+  private readonly cryptoManager: CryptoManager;
   private readonly messageManager: MessageManager;
   private readonly peerAddress: string;
 
   constructor(
     db: Database,
-    signer: CustomSigner,
+    cryptoManager: CryptoManager,
     messageManager: MessageManager,
     peerAddress: string
   ) {
     this.db = db;
-    this.signer = signer;
+    this.cryptoManager = cryptoManager;
     this.messageManager = messageManager;
     this.peerAddress = peerAddress;
   }
@@ -165,7 +165,7 @@ export class PaymentSettleRequestSender {
     simplexState.setSeqNum(baseSeqNum + 1);
 
     await PaymentChannel.signUpdatedSimplexState(
-      this.signer,
+      this.cryptoManager,
       signedSimplexState,
       simplexState
     );

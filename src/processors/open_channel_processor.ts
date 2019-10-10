@@ -33,7 +33,8 @@ import { BigNumber, LogDescription } from 'ethers/utils';
 
 import celerLedgerAbi from '../abi/celer_ledger.json';
 import { Config } from '../config';
-import { CustomSigner } from '../crypto/custom_signer';
+import { ContractsInfo } from '../contracts_info.js';
+import { CryptoManager } from '../crypto/crypto_manager';
 import { Database } from '../data/database';
 import { DepositWithdrawal } from '../data/deposit_withdrawal';
 import { PaymentChannel } from '../data/payment_channel';
@@ -61,21 +62,21 @@ import * as typeUtils from '../utils/types';
 export class OpenChannelProcessor {
   private readonly db: Database;
   private readonly messageManager: MessageManager;
-  private readonly signer: CustomSigner;
-  private readonly provider: JsonRpcProvider;
+  private readonly cryptoManager: CryptoManager;
+  private readonly contractsInfo: ContractsInfo;
   private readonly config: Config;
 
   constructor(
     db: Database,
     messageManager: MessageManager,
-    signer: CustomSigner,
-    provider: JsonRpcProvider,
+    cryptoManager: CryptoManager,
+    contractsInfo: ContractsInfo,
     config: Config
   ) {
     this.db = db;
     this.messageManager = messageManager;
-    this.signer = signer;
-    this.provider = provider;
+    this.cryptoManager = cryptoManager;
+    this.contractsInfo = contractsInfo;
     this.config = config;
   }
 
@@ -85,7 +86,7 @@ export class OpenChannelProcessor {
     selfAmount: BigNumber,
     peerAmount: BigNumber
   ): Promise<string> {
-    const selfAddress = await this.provider.getSigner().getAddress();
+    const selfAddress = await this.cryptoManager.signer.getAddress();
     const peerAddress = ethers.utils.getAddress(this.config.ospEthAddress);
 
     // TODO(dominator008): Revisit this logic and maybe allow multiple channels
@@ -131,13 +132,13 @@ export class OpenChannelProcessor {
     initializer.setInitDistribution(distribution);
     initializer.setDisputeTimeout(this.config.paymentChannelDisputeTimeout);
     initializer.setMsgValueReceiver(msgValueReceiver);
-    const blockNumber = await this.provider.getBlockNumber();
+    const blockNumber = await this.cryptoManager.provider.getBlockNumber();
     initializer.setOpenDeadline(
       blockNumber + this.config.paymentChannelOpenTimeout
     );
 
     const initializerBytes = initializer.serializeBinary();
-    const signature = await this.signer.signHash(initializerBytes);
+    const signature = await this.cryptoManager.signHash(initializerBytes);
     const signatureBytes = ethers.utils.arrayify(signature);
     const openBy = OpenChannelBy.OPEN_CHANNEL_PROPOSER;
     const request = new OpenChannelRequest();
@@ -177,9 +178,9 @@ export class OpenChannelProcessor {
     const requestBytes = request.serializeBinary();
 
     const celerLedger = new ethers.Contract(
-      this.config.celerLedgerAddress,
+      this.contractsInfo.celerLedgerAddress,
       JSON.stringify(celerLedgerAbi),
-      this.provider.getSigner()
+      this.cryptoManager.signer
     );
 
     const overrides: TransactionRequest = {};
@@ -215,7 +216,7 @@ export class OpenChannelProcessor {
     let selfDeposit: BigNumber;
     let peerDeposit: BigNumber;
     let peerAddress: string;
-    const selfAddress = await this.provider.getSigner().getAddress();
+    const selfAddress = await this.cryptoManager.signer.getAddress();
     if (addresses[0] === selfAddress) {
       peerAddress = addresses[1];
       selfDeposit = initialDeposits[0];
@@ -306,7 +307,7 @@ export class OpenChannelProcessor {
     simplexState.setTotalPendingAmount(zeroBytes);
     const simplexStateBytes = simplexState.serializeBinary();
     const selfSig = ethers.utils.arrayify(
-      await this.signer.signHash(simplexStateBytes)
+      await this.cryptoManager.signHash(simplexStateBytes)
     );
     let sigOfPeerFrom: Uint8Array;
     let sigOfPeerTo: Uint8Array;

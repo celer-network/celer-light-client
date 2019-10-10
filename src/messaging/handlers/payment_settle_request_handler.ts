@@ -28,7 +28,7 @@ import { ethers } from 'ethers';
 import { BigNumber } from 'ethers/utils';
 
 import { Config } from '../../config';
-import { CustomSigner } from '../../crypto/custom_signer';
+import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
 import { Payment, PaymentStatus } from '../../data/payment';
 import { PaymentChannel } from '../../data/payment_channel';
@@ -53,7 +53,7 @@ export class PaymentSettleRequestHandler {
   private readonly db: Database;
   private readonly messageManager: MessageManager;
   private readonly resolvePaymentProcessor: ResolvePaymentProcessor;
-  private readonly signer: CustomSigner;
+  private readonly cryptoManager: CryptoManager;
   private readonly config: Config;
   private readonly peerAddress: string;
 
@@ -61,13 +61,13 @@ export class PaymentSettleRequestHandler {
     db: Database,
     messageManager: MessageManager,
     resolvePaymentProcessor: ResolvePaymentProcessor,
-    signer: CustomSigner,
+    cryptoManager: CryptoManager,
     config: Config
   ) {
     this.db = db;
     this.messageManager = messageManager;
     this.resolvePaymentProcessor = resolvePaymentProcessor;
-    this.signer = signer;
+    this.cryptoManager = cryptoManager;
     this.config = config;
     this.peerAddress = ethers.utils.getAddress(this.config.ospEthAddress);
   }
@@ -88,7 +88,7 @@ export class PaymentSettleRequestHandler {
       result: { valid, errCode, errReason },
       lastCosignedSimplexState
     } = await this.verifyPaymentSettleRequest(
-      await this.signer.provider.getSigner().getAddress(),
+      await this.cryptoManager.signer.getAddress(),
       receivedChannelId,
       request.getBaseSeq(),
       receivedSignedSimplexState,
@@ -100,7 +100,7 @@ export class PaymentSettleRequestHandler {
     const responseMessage = new CelerMsg();
     const paymentSettleResponse = new PaymentSettleResponse();
     if (valid) {
-      const selfSignature = await this.signer.signHash(
+      const selfSignature = await this.cryptoManager.signHash(
         receivedSimplexStateBytes
       );
       const selfSignatureBytes = ethers.utils.arrayify(selfSignature);
@@ -373,7 +373,7 @@ export class PaymentSettleRequestHandler {
           }
 
           // Verify payment expiration
-          const blockNumber = await this.signer.provider.getBlockNumber();
+          const blockNumber = await this.cryptoManager.provider.getBlockNumber();
           if (
             blockNumber <
             payment.getConditionalPay().getResolveDeadline() +

@@ -24,17 +24,6 @@
  */
 
 export interface Config {
-  /** The CelerLedger contract address */
-  readonly celerLedgerAddress: string;
-  /** The CelerWallet contract address */
-  readonly celerWalletAddress: string;
-  /** The PayRegistry contract address */
-  readonly payRegistryAddress: string;
-  /** The PayResolver contract address */
-  readonly payResolverAddress: string;
-  /** The VirtContractResolver contract address */
-  readonly virtContractResolverAddress: string;
-
   /** The payment channel open timeout, in blocks */
   readonly paymentChannelOpenTimeout: number;
   /** The payment channel dispute timeout, in blocks */

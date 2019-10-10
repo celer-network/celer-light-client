@@ -28,15 +28,16 @@
  */
 
 import isNode from 'detect-node';
-import { ethers } from 'ethers';
-import { JsonRpcProvider } from 'ethers/providers';
+import { ContractTransaction, ethers, Signer, Wallet } from 'ethers';
+import { AsyncSendable, JsonRpcProvider, Web3Provider } from 'ethers/providers';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 
 import { grpc } from '@improbable-eng/grpc-web';
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport';
 
 import { Config } from '../config';
-import { CustomSigner } from '../crypto/custom_signer';
+import { ContractsInfo } from '../contracts_info';
+import { CryptoManager } from '../crypto/crypto_manager';
 import { Database } from '../data/database';
 import { HashLock } from '../data/hash_lock';
 import { CondPayReceiptHandler } from '../messaging/handlers/cond_pay_receipt_handler';
@@ -64,13 +65,13 @@ import {
   TransferFunctionTypeMap
 } from '../protobufs/entity_pb';
 import { AuthReq, CelerMsg } from '../protobufs/message_pb';
+import * as typeUtils from '../utils/types';
 import { PaymentChannelInfo } from './payment_channel_info';
 import { PaymentInfo } from './payment_info';
 
 export class Celer {
   private readonly db: Database;
-  private readonly signer: CustomSigner;
-  private readonly provider: JsonRpcProvider;
+  private readonly cryptoManager: CryptoManager;
   private readonly config: Config;
   private readonly peerAddress: string;
 
@@ -83,7 +84,12 @@ export class Celer {
   private readonly getPaymentChannelInfoProcessor: GetPaymentChannelInfoProcessor;
   private readonly getPaymentInfoProcessor: GetPaymentInfoProcessor;
 
-  private constructor(config: Config, provider?: JsonRpcProvider) {
+  private constructor(
+    provider: JsonRpcProvider,
+    signer: Signer,
+    contractsInfo: ContractsInfo,
+    config: Config
+  ) {
     this.db = new Database();
     const db = this.db;
     this.config = config;
@@ -95,37 +101,36 @@ export class Celer {
     if (!provider) {
       provider = new JsonRpcProvider(config.ethJsonRpcUrl);
     }
-    this.provider = provider;
-    const signer = new CustomSigner(provider);
-    this.signer = signer;
+    const cryptoManager = new CryptoManager(provider, signer);
+    this.cryptoManager = cryptoManager;
     const messageManager = new MessageManager(config);
     this.messageManager = messageManager;
 
     const condPayRequestSender = new CondPayRequestSender(
       db,
       messageManager,
-      signer,
-      provider,
+      cryptoManager,
+      contractsInfo,
       config
     );
     const paymentSettleRequestSender = new PaymentSettleRequestSender(
       db,
-      signer,
+      cryptoManager,
       messageManager,
       peerAddress
     );
     this.openChannelProcessor = new OpenChannelProcessor(
       db,
       this.messageManager,
-      signer,
-      provider,
+      cryptoManager,
+      contractsInfo,
       config
     );
-    this.depositProcessor = new DepositProcessor(db, provider, config);
+    this.depositProcessor = new DepositProcessor(db, signer, contractsInfo);
     this.sendPaymentProcessor = new SendPaymentProcessor(condPayRequestSender);
     const resolvePaymentProcessor = new ResolvePaymentProcessor(
       provider,
-      config
+      contractsInfo
     );
     this.resolvePaymentProcessor = resolvePaymentProcessor;
     this.getPaymentChannelInfoProcessor = new GetPaymentChannelInfoProcessor(
@@ -135,11 +140,17 @@ export class Celer {
 
     this.messageManager.setHandler(
       CelerMsg.MessageCase.COND_PAY_REQUEST,
-      new CondPayRequestHandler(db, messageManager, signer, config)
+      new CondPayRequestHandler(
+        db,
+        messageManager,
+        cryptoManager,
+        contractsInfo,
+        config
+      )
     );
     this.messageManager.setHandler(
       CelerMsg.MessageCase.COND_PAY_RESPONSE,
-      new CondPayResponseHandler(db, signer, peerAddress)
+      new CondPayResponseHandler(db, cryptoManager, peerAddress)
     );
     this.messageManager.setHandler(
       CelerMsg.MessageCase.COND_PAY_RECEIPT,
@@ -147,7 +158,7 @@ export class Celer {
     );
     this.messageManager.setHandler(
       CelerMsg.MessageCase.REVEAL_SECRET,
-      new RevealSecretHandler(db, messageManager, signer)
+      new RevealSecretHandler(db, messageManager, cryptoManager)
     );
     this.messageManager.setHandler(
       CelerMsg.MessageCase.REVEAL_SECRET_ACK,
@@ -159,13 +170,13 @@ export class Celer {
         db,
         messageManager,
         resolvePaymentProcessor,
-        signer,
+        cryptoManager,
         config
       )
     );
     this.messageManager.setHandler(
       CelerMsg.MessageCase.PAYMENT_SETTLE_RESPONSE,
-      new PaymentSettleResponseHandler(db, signer, peerAddress)
+      new PaymentSettleResponseHandler(db, cryptoManager, peerAddress)
     );
     this.messageManager.setHandler(
       CelerMsg.MessageCase.PAYMENT_SETTLE_PROOF,
@@ -180,18 +191,67 @@ export class Celer {
   /**
    * Creates a Celer Light Client instance.
    *
+   * @param connection One of:
+   *     <ul>
+   *       <li>JsonRpcProvider instance</li>
+   *       <li>Metamask web3.currentProvider object</li>
+   *       <li>JSON-RPC connection URL</li>
+   *     </ul>
+   * @param account One of:
+   *     <ul>
+   *       <li>Signer (Wallet)</li>
+   *       <li>Hex-encoded address of an account in the provider</li>
+   *       <li>Hex-encoded private key</li>
+   *       <li>Number index of an account loaded in the provider</li>
+   *     </ul>
+   * @param contractsInfo The addresses of the Celer contracts
    * @param config The configuration object
-   * @param provider An optional JsonRpcProvider
    */
   static async create(
-    config: Config,
-    provider?: JsonRpcProvider
+    connection: JsonRpcProvider | AsyncSendable | string,
+    account: Signer | string | number,
+    contractsInfo: ContractsInfo,
+    config: Config
   ): Promise<Celer> {
-    const client = new Celer(config, provider);
+    let provider: JsonRpcProvider;
+    if (connection instanceof ethers.providers.JsonRpcProvider) {
+      provider = connection;
+    } else if (typeof connection === 'string') {
+      provider = new JsonRpcProvider(connection);
+    } else {
+      // Assume AsyncSendable
+      provider = new Web3Provider(connection);
+    }
+
+    // Connect signer to provider
+    let signer: Signer;
+    if (Signer.isSigner(account)) {
+      if (account.provider === provider) {
+        signer = account;
+      } else if (account instanceof ethers.Wallet) {
+        signer = account.connect(provider);
+      } else {
+        throw new Error(`Invalid account ${account}`);
+      }
+    } else if (typeof account === 'number') {
+      // Index of the account in provider
+      signer = provider.getSigner(account);
+    } else if (typeUtils.isAddress(account)) {
+      const accounts = await provider.listAccounts();
+      if (!accounts.includes(account)) {
+        throw new Error(`Unknown account ${account} in provider`);
+      }
+      signer = provider.getSigner(account);
+    } else {
+      // Assume private key
+      signer = new Wallet(account, provider);
+    }
+
+    const client = new Celer(provider, signer, contractsInfo, config);
     await client.messageManager.createSession();
     const authRequest = new AuthReq();
     const selfAddressBytes = ethers.utils.arrayify(
-      await client.provider.getSigner().getAddress()
+      await client.cryptoManager.signer.getAddress()
     );
     const peerAddressBytes = ethers.utils.arrayify(client.peerAddress);
     // Use Unix timestamp and pad to 8 bytes as required by the OSP
@@ -201,7 +261,7 @@ export class Celer {
       8
     );
     const signatureBytes = ethers.utils.arrayify(
-      await client.signer.signHash(timestampBytes)
+      await client.cryptoManager.signHash(timestampBytes)
     );
     authRequest.setMyAddr(selfAddressBytes);
     authRequest.setTimestamp(timestamp);

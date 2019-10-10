@@ -25,7 +25,7 @@
 
 import { ethers } from 'ethers';
 
-import { CustomSigner } from '../../crypto/custom_signer';
+import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
 import { HashLock } from '../../data/hash_lock';
 import { PaymentStatus } from '../../data/payment';
@@ -37,16 +37,16 @@ import { MessageManager } from '../message_manager';
 export class RevealSecretHandler {
   private readonly db: Database;
   private readonly messageManager: MessageManager;
-  private readonly signer: CustomSigner;
+  private readonly cryptoManager: CryptoManager;
 
   constructor(
     db: Database,
     messageManager: MessageManager,
-    signer: CustomSigner
+    cryptoManager: CryptoManager
   ) {
     this.db = db;
     this.messageManager = messageManager;
-    this.signer = signer;
+    this.cryptoManager = cryptoManager;
   }
 
   async handle(revealSecretMessage: CelerMsg): Promise<void> {
@@ -62,7 +62,7 @@ export class RevealSecretHandler {
     const conditionalPay = payment.getConditionalPay();
     if (
       typeUtils.bytesToAddress(conditionalPay.getDest_asU8()) !==
-      (await this.signer.provider.getSigner().getAddress())
+      (await this.cryptoManager.signer.getAddress())
     ) {
       return;
     }
@@ -78,7 +78,7 @@ export class RevealSecretHandler {
 
     await this.db.hashLocks.put(new HashLock(secret, hash));
 
-    const signature = await this.signer.signHash(secret);
+    const signature = await this.cryptoManager.signHash(secret);
     const revealSecretAck = new RevealSecretAck();
     revealSecretAck.setPayId(paymentIdBytes);
     revealSecretAck.setPayDestSecretSig(ethers.utils.arrayify(signature));
