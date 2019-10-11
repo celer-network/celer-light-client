@@ -34,4 +34,4 @@ export {
 } from './protobufs/entity_pb';
 export { PaymentChannelStatus } from './data/payment_channel';
 export { PaymentStatus } from './data/payment';
-export { Config } from './config';
+export { Config } from './api/config';

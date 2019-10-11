@@ -28,8 +28,7 @@ import { JsonRpcProvider, TransactionResponse } from 'ethers/providers';
 import { BigNumber } from 'ethers/utils';
 
 import erc20Abi from '../abi/erc20.json';
-import { Config } from '../config.js';
-import { ContractsInfo } from '../contracts_info.js';
+import { ContractsInfo } from '../api/contracts_info.js';
 
 const APPROVAL_AMOUNT = ethers.utils.parseEther('1e32');
 

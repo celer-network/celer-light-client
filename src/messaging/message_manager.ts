@@ -27,7 +27,7 @@ import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 
 import { grpc } from '@improbable-eng/grpc-web';
 
-import { Config } from '../config';
+import { Config } from '../api/config';
 import {
   AuthReq,
   CelerMsg,

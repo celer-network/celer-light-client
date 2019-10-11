@@ -23,20 +23,65 @@
  * IN THE SOFTWARE.
  */
 
+import { Contract, ethers } from 'ethers';
+import { BigNumber } from 'ethers/utils';
+
+import celerLedgerAbi from '../abi/celer_ledger.json';
+import { ContractsInfo } from '../api/contracts_info';
+import { CryptoManager } from '../crypto/crypto_manager.js';
 import { Database } from '../data/database';
-import { TokenInfo } from '../protobufs/entity_pb';
+import { CooperativeWithdrawRequest } from '../protobufs/chain_pb';
+import {
+  AccountAmtPair,
+  CooperativeWithdrawInfo,
+  TokenInfo
+} from '../protobufs/entity_pb';
 
 export class CooperativeWithdrawProcessor {
   private readonly db: Database;
+  private readonly cryptoManager: CryptoManager;
+  private readonly contractsInfo: ContractsInfo;
 
   // TODO(dominator008): Implement this
-  constructor() {}
+  constructor(
+    db: Database,
+    cryptoManager: CryptoManager,
+    contractsInfo: ContractsInfo
+  ) {
+    this.db = db;
+    this.cryptoManager = cryptoManager;
+    this.contractsInfo = contractsInfo;
+  }
 
   async cooperativeWithdraw(
     channelId: string,
-    tokenInfo: TokenInfo,
     amount: string
   ): Promise<string> {
+    const channelIdBytes = ethers.utils.arrayify(channelId);
+    const celerLedger = new ethers.Contract(
+      this.contractsInfo.celerLedgerAddress,
+      JSON.stringify(celerLedgerAbi),
+      this.cryptoManager.provider
+    );
+    let seqNum: BigNumber = await celerLedger.getCooperativeWithdrawSeqNum(
+      channelIdBytes
+    );
+    seqNum = seqNum.add(1);
+
+    const accountAmtPair = new AccountAmtPair();
+    accountAmtPair.setAccount(
+      ethers.utils.arrayify(await this.cryptoManager.signer.getAddress())
+    );
+    accountAmtPair.setAmt(
+      ethers.utils.arrayify(ethers.utils.bigNumberify(amount))
+    );
+
+    const cooperativeWithdrawInfo = new CooperativeWithdrawInfo();
+    cooperativeWithdrawInfo.setChannelId(channelIdBytes);
+
+    const request = new CooperativeWithdrawRequest();
+
+    //    request.setWithdrawInfo();
     return '';
   }
 }

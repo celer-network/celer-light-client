@@ -35,8 +35,6 @@ import { Any } from 'google-protobuf/google/protobuf/any_pb';
 import { grpc } from '@improbable-eng/grpc-web';
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport';
 
-import { Config } from '../config';
-import { ContractsInfo } from '../contracts_info';
 import { CryptoManager } from '../crypto/crypto_manager';
 import { Database } from '../data/database';
 import { HashLock } from '../data/hash_lock';
@@ -66,6 +64,8 @@ import {
 } from '../protobufs/entity_pb';
 import { AuthReq, CelerMsg } from '../protobufs/message_pb';
 import * as typeUtils from '../utils/types';
+import { Config } from './config';
+import { ContractsInfo } from './contracts_info';
 import { PaymentChannelInfo } from './payment_channel_info';
 import { PaymentInfo } from './payment_info';
 

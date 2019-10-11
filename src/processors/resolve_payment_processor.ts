@@ -28,7 +28,7 @@ import { JsonRpcProvider } from 'ethers/providers';
 import { BigNumber } from 'ethers/utils';
 
 import payRegistryAbi from '../abi/pay_registry.json';
-import { ContractsInfo } from '../contracts_info.js';
+import { ContractsInfo } from '../api/contracts_info.js';
 
 export class OnChainPaymentInfo {
   readonly amount: BigNumber;

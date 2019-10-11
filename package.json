@@ -17,6 +17,7 @@
     "build": "yarn run compile && yarn run bundle:browser && yarn run bundle:node",
     "docs": "npx typedoc --name \"Celer Light Client API Docs\" --out docs --excludePrivate --disableOutputCheck --theme node_modules/typedoc-thunder-theme/bin/default src",
     "demo": "yarn run build && npx parcel serve --no-hmr -d demoout demo/index.html",
+    "build:demo": "yarn run build && npx parcel build --public-url '.' -d demoout demo/index.html",
     "watch": "npx parcel watch demo/index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -47,9 +48,5 @@
     "ts-protoc-gen": "^0.11.0",
     "web3": "1.2.1"
   },
-  "files": [
-    "browser",
-    "dist",
-    "README.md"
-  ]
+  "files": ["browser", "dist", "README.md"]
 }

@@ -27,7 +27,7 @@ import Dexie from 'dexie';
 import { ethers } from 'ethers';
 import { BigNumber } from 'ethers/utils';
 
-import { Config } from '../../config';
+import { Config } from '../../api/config';
 import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
 import { Payment, PaymentStatus } from '../../data/payment';

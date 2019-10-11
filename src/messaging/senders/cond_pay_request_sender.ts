@@ -1,10 +1,9 @@
 import { ethers } from 'ethers';
-import { JsonRpcProvider } from 'ethers/providers';
 import { BigNumber } from 'ethers/utils';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 
-import { Config } from '../../config';
-import { ContractsInfo } from '../../contracts_info';
+import { Config } from '../../api/config';
+import { ContractsInfo } from '../../api/contracts_info';
 import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
 import { Payment, PaymentStatus } from '../../data/payment';
@@ -36,7 +35,6 @@ export class CondPayRequestSender {
   private readonly db: Database;
   private readonly messageManager: MessageManager;
   private readonly cryptoManager: CryptoManager;
-  private readonly provider: JsonRpcProvider;
   private readonly contractsInfo: ContractsInfo;
   private readonly config: Config;
   private readonly peerAddress: string;
@@ -77,7 +75,8 @@ export class CondPayRequestSender {
     accountAmount.setAmt(ethers.utils.arrayify(amount));
     transfer.setReceiver(accountAmount);
 
-    const resolveDeadline = (await this.provider.getBlockNumber()) + timeout;
+    const resolveDeadline =
+      (await this.cryptoManager.provider.getBlockNumber()) + timeout;
     const conditionalPay = new ConditionalPay();
     conditionalPay.setSrc(
       ethers.utils.arrayify(await this.cryptoManager.signer.getAddress())

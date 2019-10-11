@@ -28,7 +28,7 @@ import { TransactionRequest, TransactionResponse } from 'ethers/providers';
 import { BigNumber, LogDescription } from 'ethers/utils';
 
 import celerLedgerAbi from '../abi/celer_ledger.json';
-import { ContractsInfo } from '../contracts_info.js';
+import { ContractsInfo } from '../api/contracts_info.js';
 import { Database } from '../data/database';
 import { TokenType, TokenTypeMap } from '../protobufs/entity_pb';
 import * as errorUtils from '../utils/errors';

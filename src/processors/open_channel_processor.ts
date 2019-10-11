@@ -32,8 +32,8 @@ import {
 import { BigNumber, LogDescription } from 'ethers/utils';
 
 import celerLedgerAbi from '../abi/celer_ledger.json';
-import { Config } from '../config';
-import { ContractsInfo } from '../contracts_info.js';
+import { Config } from '../api/config';
+import { ContractsInfo } from '../api/contracts_info.js';
 import { CryptoManager } from '../crypto/crypto_manager';
 import { Database } from '../data/database';
 import { DepositWithdrawal } from '../data/deposit_withdrawal';

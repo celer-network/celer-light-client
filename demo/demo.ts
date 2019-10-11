@@ -1,8 +1,8 @@
 import { ethers } from 'ethers';
 
 import { Celer, PaymentStatus, TokenType } from '../src/index';
-import config from './local_config.json';
-import contractsInfo from './local_contracts.json';
+import config from './ropsten_config.json';
+import contractsInfo from './ropsten_contracts.json';
 
 declare global {
   interface Window {

@@ -25,8 +25,8 @@
 
 import { ethers } from 'ethers';
 
-import { Config } from '../../config';
-import { ContractsInfo } from '../../contracts_info';
+import { Config } from '../../api/config';
+import { ContractsInfo } from '../../api/contracts_info';
 import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
 import { Payment, PaymentStatus } from '../../data/payment';

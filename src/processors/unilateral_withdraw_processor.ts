@@ -23,7 +23,7 @@
  * IN THE SOFTWARE.
  */
 
-export class NonCooperativeWithdrawProcessor {
+export class UnilateralWithdrawProcessor {
   // TODO(dominator008): Implement this
   constructor() {}
 }
