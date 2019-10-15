@@ -2,8 +2,8 @@
 .DS_Store
 /browser/
 /dist/
-/demoout/
-/tsout/
+/*demo_out/
+/ts_out/
 node_modules/
 .vscode/*
 celer-light-client-*.tgz

@@ -10,14 +10,14 @@
   },
   "license": "MIT",
   "scripts": {
-    "clean": "rm -rf browser dist tsout demoout",
+    "clean": "rm -rf browser dist ts_out demo_out",
     "compile": "npx tsc -p .",
     "bundle:browser": "npx parcel build -d browser --out-file browser.js --global celer src/index.ts",
     "bundle:node": "npx parcel build --target node src/index.ts",
     "build": "yarn run compile && yarn run bundle:browser && yarn run bundle:node",
     "docs": "npx typedoc --name \"Celer Light Client API Docs\" --out docs --excludePrivate --disableOutputCheck --theme node_modules/typedoc-thunder-theme/bin/default src",
-    "demo": "yarn run build && npx parcel serve --no-hmr -d demoout demo/index.html",
-    "build:demo": "yarn run build && npx parcel build --public-url '.' -d demoout demo/index.html",
+    "demo": "yarn run build && npx parcel serve --no-hmr -d demo_out demo/index.html",
+    "build:demo": "yarn run build && npx parcel build --public-url '.' -d public_demo_out demo/index.html",
     "watch": "npx parcel watch demo/index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -48,5 +48,9 @@
     "ts-protoc-gen": "^0.11.0",
     "web3": "1.2.1"
   },
-  "files": ["browser", "dist", "README.md"]
+  "files": [
+    "browser",
+    "dist",
+    "README.md"
+  ]
 }

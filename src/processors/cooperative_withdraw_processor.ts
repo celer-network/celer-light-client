@@ -37,6 +37,8 @@ import {
   TokenInfo
 } from '../protobufs/entity_pb';
 
+const COOPERATIVE_WITHDRAW_TIMEOUT = 10;
+
 export class CooperativeWithdrawProcessor {
   private readonly db: Database;
   private readonly cryptoManager: CryptoManager;
@@ -76,12 +78,19 @@ export class CooperativeWithdrawProcessor {
       ethers.utils.arrayify(ethers.utils.bigNumberify(amount))
     );
 
-    const cooperativeWithdrawInfo = new CooperativeWithdrawInfo();
-    cooperativeWithdrawInfo.setChannelId(channelIdBytes);
+    const withdrawInfo = new CooperativeWithdrawInfo();
+    withdrawInfo.setChannelId(channelIdBytes);
+    withdrawInfo.setSeqNum(seqNum.toNumber());
+    withdrawInfo.setWithdraw(accountAmtPair);
+    withdrawInfo.setWithdrawDeadline(
+      (await this.cryptoManager.provider.getBlockNumber()) +
+        COOPERATIVE_WITHDRAW_TIMEOUT
+    );
 
     const request = new CooperativeWithdrawRequest();
-
     //    request.setWithdrawInfo();
     return '';
   }
+
+  private async sendCooperativeWithdrawTx(): Promise<void> {}
 }

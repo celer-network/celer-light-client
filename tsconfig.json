@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "declaration": true,
     "declarationDir": "dist",
-    "outDir": "tsout"
+    "outDir": "ts_out"
   },
   "include": ["src/**/*", "demo/**/*"]
 }

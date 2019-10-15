@@ -18,14 +18,17 @@ declare global {
 }
 
 function updateBalance(): void {
-  window.client
-    .getPaymentChannelInfo(window.channelId)
-    .then(
-      info =>
-        (document.getElementById('balance').textContent = JSON.stringify(
-          info.balance
-        ))
-    );
+  if (window.channelId) {
+    window.client
+      .getPaymentChannelInfo(window.channelId)
+      .then(
+        info =>
+          (document.getElementById('balance').textContent = JSON.stringify(
+            info.balance
+          ))
+      )
+      .catch();
+  }
 }
 
 function openChannel(): void {
@@ -67,17 +70,6 @@ function sendPayment(): void {
       document.getElementById(
         'payment'
       ).textContent = `Payment ${paymentId} sent`;
-      const balanceUpdate = setInterval(() => {
-        client
-          .getPaymentInfo(paymentId)
-          .then(info => {
-            if (info.status === PaymentStatus.CO_SIGNED_SETTLED) {
-              updateBalance();
-              clearInterval(balanceUpdate);
-            }
-          })
-          .catch(_ => {});
-      }, 1000);
     });
 }
 
@@ -101,6 +93,11 @@ function sendPayment(): void {
     contractsInfo,
     config
   );
+
+  setInterval(() => {
+    updateBalance();
+  }, 1000);
+
   window.client = client;
 })();
 
