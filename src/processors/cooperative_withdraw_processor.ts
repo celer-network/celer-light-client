@@ -23,34 +23,46 @@
  * IN THE SOFTWARE.
  */
 
-import { Contract, ethers } from 'ethers';
-import { BigNumber } from 'ethers/utils';
+import { ethers } from 'ethers';
+import { TransactionResponse } from 'ethers/providers';
+import { BigNumber, LogDescription } from 'ethers/utils';
 
 import celerLedgerAbi from '../abi/celer_ledger.json';
 import { ContractsInfo } from '../api/contracts_info';
 import { CryptoManager } from '../crypto/crypto_manager.js';
 import { Database } from '../data/database';
-import { CooperativeWithdrawRequest } from '../protobufs/chain_pb';
+import { MessageManager } from '../messaging/message_manager.js';
+import { CooperativeWithdrawRequest as OnChainCooperativeWithdrawRequest } from '../protobufs/chain_pb';
 import {
   AccountAmtPair,
-  CooperativeWithdrawInfo,
-  TokenInfo
+  CooperativeWithdrawInfo
 } from '../protobufs/entity_pb';
+import {
+  CelerMsg,
+  CooperativeWithdrawRequest,
+  CooperativeWithdrawResponse
+} from '../protobufs/message_pb';
+import * as typeUtils from '../utils/types';
 
 const COOPERATIVE_WITHDRAW_TIMEOUT = 10;
+const WAIT_RESPONSE_INTERVAL = 100;
 
 export class CooperativeWithdrawProcessor {
   private readonly db: Database;
+  private readonly messageManager: MessageManager;
   private readonly cryptoManager: CryptoManager;
   private readonly contractsInfo: ContractsInfo;
 
-  // TODO(dominator008): Implement this
+  private currentResponse: CooperativeWithdrawResponse;
+
   constructor(
     db: Database,
+    messageManager: MessageManager,
     cryptoManager: CryptoManager,
     contractsInfo: ContractsInfo
   ) {
     this.db = db;
+    this.messageManager = messageManager;
     this.cryptoManager = cryptoManager;
     this.contractsInfo = contractsInfo;
   }
@@ -87,10 +99,125 @@ export class CooperativeWithdrawProcessor {
         COOPERATIVE_WITHDRAW_TIMEOUT
     );
 
+    const requesterSig = await this.cryptoManager.signHash(
+      withdrawInfo.serializeBinary()
+    );
     const request = new CooperativeWithdrawRequest();
-    //    request.setWithdrawInfo();
-    return '';
+    request.setWithdrawInfo(withdrawInfo);
+    request.setRequesterSig(ethers.utils.arrayify(requesterSig));
+
+    const message = new CelerMsg();
+    message.setWithdrawRequest(request);
+    // TODO(dominator008): Update pending withdrawal
+    await this.messageManager.sendMessage(message);
+
+    while (!this.currentResponse) {
+      await CooperativeWithdrawProcessor.sleep(WAIT_RESPONSE_INTERVAL);
+    }
+    const txHash = await this.sendCooperativeWithdrawTx(this.currentResponse);
+    this.currentResponse = undefined;
+    return txHash;
   }
 
-  private async sendCooperativeWithdrawTx(): Promise<void> {}
+  async handle(message: CelerMsg): Promise<void> {
+    const response = message.getWithdrawResponse();
+    // TODO(dominator008): Validate that we do have a pending request
+    // corresponding to the response, in case the counterparty tricks us with a
+    // stale response
+    this.currentResponse = message.getWithdrawResponse();
+  }
+
+  private static sleep(milliseconds: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+  }
+
+  private async sendCooperativeWithdrawTx(
+    response: CooperativeWithdrawResponse
+  ): Promise<string> {
+    const requesterSigBytes = response.getRequesterSig_asU8();
+    const approverSigBytes = response.getApproverSig_asU8();
+    const withdrawInfo = response.getWithdrawInfo();
+    const serializedWithdrawInfo = withdrawInfo.serializeBinary();
+    const channelId = ethers.utils.hexlify(withdrawInfo.getChannelId_asU8());
+
+    const selfAddress = await this.cryptoManager.signer.getAddress();
+    const peerAddress = (await this.db.paymentChannels.get(channelId))
+      .peerAddress;
+
+    if (
+      !CryptoManager.isSignatureValid(
+        peerAddress,
+        serializedWithdrawInfo,
+        ethers.utils.splitSignature(approverSigBytes)
+      )
+    ) {
+      throw new Error('Invalid peer signature');
+    }
+
+    const sigsList = typeUtils.sortSignatureList(
+      selfAddress,
+      peerAddress,
+      requesterSigBytes,
+      approverSigBytes
+    );
+    const onChainRequest = new OnChainCooperativeWithdrawRequest();
+    onChainRequest.setWithdrawInfo(serializedWithdrawInfo);
+    onChainRequest.setSigsList(sigsList);
+
+    const celerLedger = new ethers.Contract(
+      this.contractsInfo.celerLedgerAddress,
+      JSON.stringify(celerLedgerAbi),
+      this.cryptoManager.signer
+    );
+
+    const tx: TransactionResponse = await celerLedger.cooperativeWithdraw(
+      onChainRequest.serializeBinary()
+    );
+    const receipt = await tx.wait();
+    if (receipt.status === 0) {
+      throw new Error(`CooperativeWithdraw tx ${tx.hash} failed`);
+    }
+    const ledgerInterface = celerLedger.interface;
+    for (const log of receipt.logs) {
+      if (log.topics[0] === ledgerInterface.events.CooperativeWithdraw.topic) {
+        await this.processCooperativeWithdrawEvent(
+          ledgerInterface.parseLog(log)
+        );
+        break;
+      }
+    }
+    return tx.hash;
+  }
+
+  private async processCooperativeWithdrawEvent(
+    log: LogDescription
+  ): Promise<void> {
+    const values = log.values;
+    const channelId = ethers.utils.hexlify(values.channelId);
+    const receiver: string = values.receiver;
+    const deposits: Uint8Array[] = values.deposits;
+    const withdrawals: Uint8Array[] = values.withdrawals;
+    // TODO(dominator008): Handle recipientChannelId
+    const db = this.db;
+    return db.transaction('rw', db.paymentChannels, async () => {
+      const channel = await db.paymentChannels.get(channelId);
+      const selfAddress = channel.selfAddress;
+      if (selfAddress !== receiver) {
+        return;
+      }
+      const depositWithdrawal = channel.depositWithdrawal;
+      if (selfAddress < channel.peerAddress) {
+        depositWithdrawal.selfDeposit = deposits[0];
+        depositWithdrawal.peerDeposit = deposits[1];
+        depositWithdrawal.selfWithdrawal = withdrawals[0];
+        depositWithdrawal.peerWithdrawal = withdrawals[1];
+      } else {
+        depositWithdrawal.selfDeposit = deposits[1];
+        depositWithdrawal.peerDeposit = deposits[0];
+        depositWithdrawal.selfWithdrawal = withdrawals[1];
+        depositWithdrawal.peerWithdrawal = withdrawals[0];
+      }
+      await db.paymentChannels.put(channel);
+    });
+  }
 }

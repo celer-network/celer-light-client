@@ -94,29 +94,23 @@ export class DepositProcessor {
     const ledgerInterface = celerLedger.interface;
     for (const log of receipt.logs) {
       if (log.topics[0] === ledgerInterface.events.Deposit.topic) {
-        await this.processDepositEvent(
-          ledgerInterface.parseLog(log),
-          selfAddress
-        );
+        await this.processDepositEvent(ledgerInterface.parseLog(log));
         break;
       }
     }
     return tx.hash;
   }
 
-  private async processDepositEvent(
-    log: LogDescription,
-    selfAddress: string
-  ): Promise<void> {
+  private async processDepositEvent(log: LogDescription): Promise<void> {
     const values = log.values;
     const channelId = ethers.utils.hexlify(values.channelId);
-    const addresses = values.peerAddrs;
-    const deposits = values.deposits;
+    const addresses: string[] = values.peerAddrs;
+    const deposits: Uint8Array[] = values.deposits;
     const db = this.db;
     return db.transaction('rw', db.paymentChannels, async () => {
       const channel = await db.paymentChannels.get(channelId);
       const depositWithdrawal = channel.depositWithdrawal;
-      if (addresses[0] === selfAddress) {
+      if (addresses[0] === channel.selfAddress) {
         depositWithdrawal.selfDeposit = deposits[0];
         depositWithdrawal.peerDeposit = deposits[1];
       } else {

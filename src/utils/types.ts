@@ -51,3 +51,15 @@ export function createTokenInfo(
   );
   return tokenInfo;
 }
+
+export function sortSignatureList(
+  selfAddress: string,
+  peerAddress: string,
+  selfSignature: Uint8Array,
+  peerSignature: Uint8Array
+): Uint8Array[] {
+  if (selfAddress < peerAddress) {
+    return [selfSignature, peerSignature];
+  }
+  return [peerSignature, selfSignature];
+}

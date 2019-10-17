@@ -50,6 +50,7 @@ import { MessageManager } from '../messaging/message_manager';
 import { CondPayRequestSender } from '../messaging/senders/cond_pay_request_sender';
 import { PaymentSettleRequestSender } from '../messaging/senders/payment_settle_request_sender';
 import { ApproveErc20Processor } from '../processors/approve_erc20_processor';
+import { CooperativeWithdrawProcessor } from '../processors/cooperative_withdraw_processor';
 import { DepositProcessor } from '../processors/deposit_processor';
 import { GetPaymentChannelInfoProcessor } from '../processors/get_payment_channel_info_processor';
 import { GetPaymentInfoProcessor } from '../processors/get_payment_info_processor';
@@ -79,6 +80,7 @@ export class Celer {
   private readonly approveErc20Processor: ApproveErc20Processor;
   private readonly openChannelProcessor: OpenChannelProcessor;
   private readonly depositProcessor: DepositProcessor;
+  private readonly cooperativeWithdrawProcessor: CooperativeWithdrawProcessor;
   private readonly sendPaymentProcessor: SendPaymentProcessor;
   private readonly resolvePaymentProcessor: ResolvePaymentProcessor;
   private readonly getPaymentChannelInfoProcessor: GetPaymentChannelInfoProcessor;
@@ -121,7 +123,7 @@ export class Celer {
     );
     this.openChannelProcessor = new OpenChannelProcessor(
       db,
-      this.messageManager,
+      messageManager,
       cryptoManager,
       contractsInfo,
       config
@@ -137,6 +139,14 @@ export class Celer {
       db
     );
     this.getPaymentInfoProcessor = new GetPaymentInfoProcessor(db);
+
+    const cooperativeWithdrawProcessor = new CooperativeWithdrawProcessor(
+      db,
+      messageManager,
+      cryptoManager,
+      contractsInfo
+    );
+    this.cooperativeWithdrawProcessor = cooperativeWithdrawProcessor;
 
     this.messageManager.setHandler(
       CelerMsg.MessageCase.COND_PAY_REQUEST,
@@ -185,6 +195,11 @@ export class Celer {
         paymentSettleRequestSender,
         resolvePaymentProcessor
       )
+    );
+
+    this.messageManager.setHandler(
+      CelerMsg.MessageCase.WITHDRAW_RESPONSE,
+      cooperativeWithdrawProcessor
     );
   }
 

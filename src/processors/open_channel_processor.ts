@@ -107,11 +107,10 @@ export class OpenChannelProcessor {
     const selfAmountBytes = ethers.utils.arrayify(selfAmount);
     const peerAmountBytes = ethers.utils.arrayify(peerAmount);
 
-    const selfAddressLower = selfAddress < peerAddress;
     const lowDistribution = new AccountAmtPair();
     const highDistribution = new AccountAmtPair();
     let msgValueReceiver: number;
-    if (selfAddressLower) {
+    if (selfAddress < peerAddress) {
       lowDistribution.setAccount(selfAddressBytes);
       lowDistribution.setAmt(selfAmountBytes);
       highDistribution.setAccount(peerAddressBytes);
@@ -148,33 +147,32 @@ export class OpenChannelProcessor {
 
     const response = await this.messageManager.openChannel(request);
     return this.sendOpenChannelTx(
+      response,
       tokenType,
       selfAmount,
-      response,
-      selfAddressLower
+      selfAddress,
+      peerAddress
     );
   }
 
   private async sendOpenChannelTx(
+    response: OpenChannelResponse,
     tokenType: TokenTypeMap[keyof TokenTypeMap],
     selfAmount: BigNumber,
-    response: OpenChannelResponse,
-    selfAddressLower: boolean
+    selfAddress: string,
+    peerAddress: string
   ): Promise<string> {
     const requesterSig = response.getRequesterSig_asU8();
     const approverSig = response.getApproverSig_asU8();
-    let lowSig: Uint8Array;
-    let highSig: Uint8Array;
-    if (selfAddressLower) {
-      lowSig = requesterSig;
-      highSig = approverSig;
-    } else {
-      lowSig = approverSig;
-      highSig = requesterSig;
-    }
+    const sigsList = typeUtils.sortSignatureList(
+      selfAddress,
+      peerAddress,
+      requesterSig,
+      approverSig
+    );
     const request = new OnChainOpenChannelRequest();
     request.setChannelInitializer(response.getChannelInitializer_asU8());
-    request.setSigsList([lowSig, highSig]);
+    request.setSigsList(sigsList);
     const requestBytes = request.serializeBinary();
 
     const celerLedger = new ethers.Contract(
