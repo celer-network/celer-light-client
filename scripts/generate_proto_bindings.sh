@@ -1,6 +1,6 @@
 #!/bin/sh
-PROTOC_GEN_TS_PATH="../node_modules/.bin/protoc-gen-ts"
-OUT_DIR="../src/protobufs"
+PROTOC_GEN_TS_PATH="node_modules/.bin/protoc-gen-ts"
+OUT_DIR="src/protobufs"
 protoc \
     -I${PROTO} \
     -I${GOCELER}/webproxy/proto \

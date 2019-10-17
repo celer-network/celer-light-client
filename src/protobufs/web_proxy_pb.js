@@ -159,9 +159,12 @@ proto.webproxyrpc.SessionToken.prototype.getToken = function() {
 };
 
 
-/** @param {string} value */
+/**
+ * @param {string} value
+ * @return {!proto.webproxyrpc.SessionToken} returns this
+ */
 proto.webproxyrpc.SessionToken.prototype.setToken = function(value) {
-  jspb.Message.setProto3StringField(this, 1, value);
+  return jspb.Message.setProto3StringField(this, 1, value);
 };
 
 

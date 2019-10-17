@@ -28,7 +28,8 @@ import { JsonRpcProvider } from 'ethers/providers';
 import { BigNumber } from 'ethers/utils';
 
 import payRegistryAbi from '../abi/pay_registry.json';
-import { ContractsInfo } from '../api/contracts_info.js';
+import { PayRegistryFactory } from '../abi/PayRegistryFactory.js';
+import { ContractsInfo } from '../api/contracts_info';
 
 export class OnChainPaymentInfo {
   readonly amount: BigNumber;
@@ -51,15 +52,13 @@ export class ResolvePaymentProcessor {
   }
 
   async getOnChainPaymentInfo(paymentId: string): Promise<OnChainPaymentInfo> {
-    const payRegistry = new ethers.Contract(
+    const payRegistry = PayRegistryFactory.connect(
       this.contractsInfo.payRegistryAddress,
-      JSON.stringify(payRegistryAbi),
       this.provider
     );
-    const [amount, resolveDeadline]: [
-      BigNumber,
-      BigNumber
-    ] = await payRegistry.payInfoMap(ethers.utils.arrayify(paymentId));
+    const { amount, resolveDeadline } = await payRegistry.functions.payInfoMap(
+      ethers.utils.arrayify(paymentId)
+    );
     if (resolveDeadline.eq(0)) {
       return undefined;
     }

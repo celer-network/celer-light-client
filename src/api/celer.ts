@@ -28,7 +28,7 @@
  */
 
 import isNode from 'detect-node';
-import { ContractTransaction, ethers, Signer, Wallet } from 'ethers';
+import { ethers, Signer, Wallet } from 'ethers';
 import { AsyncSendable, JsonRpcProvider, Web3Provider } from 'ethers/providers';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 

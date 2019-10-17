@@ -505,9 +505,12 @@ proto.entity.AccountAmtPair.prototype.getAccount_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.AccountAmtPair} returns this
+ */
 proto.entity.AccountAmtPair.prototype.setAccount = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -544,9 +547,12 @@ proto.entity.AccountAmtPair.prototype.getAmt_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.AccountAmtPair} returns this
+ */
 proto.entity.AccountAmtPair.prototype.setAmt = function(value) {
-  jspb.Message.setProto3BytesField(this, 2, value);
+  return jspb.Message.setProto3BytesField(this, 2, value);
 };
 
 
@@ -683,9 +689,12 @@ proto.entity.TokenInfo.prototype.getTokenType = function() {
 };
 
 
-/** @param {!proto.entity.TokenType} value */
+/**
+ * @param {!proto.entity.TokenType} value
+ * @return {!proto.entity.TokenInfo} returns this
+ */
 proto.entity.TokenInfo.prototype.setTokenType = function(value) {
-  jspb.Message.setProto3EnumField(this, 1, value);
+  return jspb.Message.setProto3EnumField(this, 1, value);
 };
 
 
@@ -722,9 +731,12 @@ proto.entity.TokenInfo.prototype.getTokenAddress_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.TokenInfo} returns this
+ */
 proto.entity.TokenInfo.prototype.setTokenAddress = function(value) {
-  jspb.Message.setProto3BytesField(this, 2, value);
+  return jspb.Message.setProto3BytesField(this, 2, value);
 };
 
 
@@ -874,17 +886,21 @@ proto.entity.TokenDistribution.prototype.getToken = function() {
 };
 
 
-/** @param {?proto.entity.TokenInfo|undefined} value */
+/**
+ * @param {?proto.entity.TokenInfo|undefined} value
+ * @return {!proto.entity.TokenDistribution} returns this
+*/
 proto.entity.TokenDistribution.prototype.setToken = function(value) {
-  jspb.Message.setWrapperField(this, 1, value);
+  return jspb.Message.setWrapperField(this, 1, value);
 };
 
 
 /**
  * Clears the message field making it undefined.
+ * @return {!proto.entity.TokenDistribution} returns this
  */
 proto.entity.TokenDistribution.prototype.clearToken = function() {
-  this.setToken(undefined);
+  return this.setToken(undefined);
 };
 
 
@@ -907,9 +923,12 @@ proto.entity.TokenDistribution.prototype.getDistributionList = function() {
 };
 
 
-/** @param {!Array<!proto.entity.AccountAmtPair>} value */
+/**
+ * @param {!Array<!proto.entity.AccountAmtPair>} value
+ * @return {!proto.entity.TokenDistribution} returns this
+*/
 proto.entity.TokenDistribution.prototype.setDistributionList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 2, value);
+  return jspb.Message.setRepeatedWrapperField(this, 2, value);
 };
 
 
@@ -925,9 +944,10 @@ proto.entity.TokenDistribution.prototype.addDistribution = function(opt_value, o
 
 /**
  * Clears the list making it empty but non-null.
+ * @return {!proto.entity.TokenDistribution} returns this
  */
 proto.entity.TokenDistribution.prototype.clearDistributionList = function() {
-  this.setDistributionList([]);
+  return this.setDistributionList([]);
 };
 
 
@@ -1069,17 +1089,21 @@ proto.entity.TokenTransfer.prototype.getToken = function() {
 };
 
 
-/** @param {?proto.entity.TokenInfo|undefined} value */
+/**
+ * @param {?proto.entity.TokenInfo|undefined} value
+ * @return {!proto.entity.TokenTransfer} returns this
+*/
 proto.entity.TokenTransfer.prototype.setToken = function(value) {
-  jspb.Message.setWrapperField(this, 1, value);
+  return jspb.Message.setWrapperField(this, 1, value);
 };
 
 
 /**
  * Clears the message field making it undefined.
+ * @return {!proto.entity.TokenTransfer} returns this
  */
 proto.entity.TokenTransfer.prototype.clearToken = function() {
-  this.setToken(undefined);
+  return this.setToken(undefined);
 };
 
 
@@ -1102,17 +1126,21 @@ proto.entity.TokenTransfer.prototype.getReceiver = function() {
 };
 
 
-/** @param {?proto.entity.AccountAmtPair|undefined} value */
+/**
+ * @param {?proto.entity.AccountAmtPair|undefined} value
+ * @return {!proto.entity.TokenTransfer} returns this
+*/
 proto.entity.TokenTransfer.prototype.setReceiver = function(value) {
-  jspb.Message.setWrapperField(this, 2, value);
+  return jspb.Message.setWrapperField(this, 2, value);
 };
 
 
 /**
  * Clears the message field making it undefined.
+ * @return {!proto.entity.TokenTransfer} returns this
  */
 proto.entity.TokenTransfer.prototype.clearReceiver = function() {
-  this.setReceiver(undefined);
+  return this.setReceiver(undefined);
 };
 
 
@@ -1346,9 +1374,12 @@ proto.entity.SimplexPaymentChannel.prototype.getChannelId_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.SimplexPaymentChannel} returns this
+ */
 proto.entity.SimplexPaymentChannel.prototype.setChannelId = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -1385,9 +1416,12 @@ proto.entity.SimplexPaymentChannel.prototype.getPeerFrom_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.SimplexPaymentChannel} returns this
+ */
 proto.entity.SimplexPaymentChannel.prototype.setPeerFrom = function(value) {
-  jspb.Message.setProto3BytesField(this, 2, value);
+  return jspb.Message.setProto3BytesField(this, 2, value);
 };
 
 
@@ -1400,9 +1434,12 @@ proto.entity.SimplexPaymentChannel.prototype.getSeqNum = function() {
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.SimplexPaymentChannel} returns this
+ */
 proto.entity.SimplexPaymentChannel.prototype.setSeqNum = function(value) {
-  jspb.Message.setProto3IntField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
@@ -1416,17 +1453,21 @@ proto.entity.SimplexPaymentChannel.prototype.getTransferToPeer = function() {
 };
 
 
-/** @param {?proto.entity.TokenTransfer|undefined} value */
+/**
+ * @param {?proto.entity.TokenTransfer|undefined} value
+ * @return {!proto.entity.SimplexPaymentChannel} returns this
+*/
 proto.entity.SimplexPaymentChannel.prototype.setTransferToPeer = function(value) {
-  jspb.Message.setWrapperField(this, 4, value);
+  return jspb.Message.setWrapperField(this, 4, value);
 };
 
 
 /**
  * Clears the message field making it undefined.
+ * @return {!proto.entity.SimplexPaymentChannel} returns this
  */
 proto.entity.SimplexPaymentChannel.prototype.clearTransferToPeer = function() {
-  this.setTransferToPeer(undefined);
+  return this.setTransferToPeer(undefined);
 };
 
 
@@ -1449,17 +1490,21 @@ proto.entity.SimplexPaymentChannel.prototype.getPendingPayIds = function() {
 };
 
 
-/** @param {?proto.entity.PayIdList|undefined} value */
+/**
+ * @param {?proto.entity.PayIdList|undefined} value
+ * @return {!proto.entity.SimplexPaymentChannel} returns this
+*/
 proto.entity.SimplexPaymentChannel.prototype.setPendingPayIds = function(value) {
-  jspb.Message.setWrapperField(this, 5, value);
+  return jspb.Message.setWrapperField(this, 5, value);
 };
 
 
 /**
  * Clears the message field making it undefined.
+ * @return {!proto.entity.SimplexPaymentChannel} returns this
  */
 proto.entity.SimplexPaymentChannel.prototype.clearPendingPayIds = function() {
-  this.setPendingPayIds(undefined);
+  return this.setPendingPayIds(undefined);
 };
 
 
@@ -1481,9 +1526,12 @@ proto.entity.SimplexPaymentChannel.prototype.getLastPayResolveDeadline = functio
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.SimplexPaymentChannel} returns this
+ */
 proto.entity.SimplexPaymentChannel.prototype.setLastPayResolveDeadline = function(value) {
-  jspb.Message.setProto3IntField(this, 6, value);
+  return jspb.Message.setProto3IntField(this, 6, value);
 };
 
 
@@ -1520,9 +1568,12 @@ proto.entity.SimplexPaymentChannel.prototype.getTotalPendingAmount_asU8 = functi
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.SimplexPaymentChannel} returns this
+ */
 proto.entity.SimplexPaymentChannel.prototype.setTotalPendingAmount = function(value) {
-  jspb.Message.setProto3BytesField(this, 7, value);
+  return jspb.Message.setProto3BytesField(this, 7, value);
 };
 
 
@@ -1690,26 +1741,31 @@ proto.entity.PayIdList.prototype.getPayIdsList_asU8 = function() {
 };
 
 
-/** @param {!(Array<!Uint8Array>|Array<string>)} value */
+/**
+ * @param {!(Array<!Uint8Array>|Array<string>)} value
+ * @return {!proto.entity.PayIdList} returns this
+ */
 proto.entity.PayIdList.prototype.setPayIdsList = function(value) {
-  jspb.Message.setField(this, 1, value || []);
+  return jspb.Message.setField(this, 1, value || []);
 };
 
 
 /**
  * @param {!(string|Uint8Array)} value
  * @param {number=} opt_index
+ * @return {!proto.entity.PayIdList} returns this
  */
 proto.entity.PayIdList.prototype.addPayIds = function(value, opt_index) {
-  jspb.Message.addToRepeatedField(this, 1, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 1, value, opt_index);
 };
 
 
 /**
  * Clears the list making it empty but non-null.
+ * @return {!proto.entity.PayIdList} returns this
  */
 proto.entity.PayIdList.prototype.clearPayIdsList = function() {
-  this.setPayIdsList([]);
+  return this.setPayIdsList([]);
 };
 
 
@@ -1746,9 +1802,12 @@ proto.entity.PayIdList.prototype.getNextListHash_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.PayIdList} returns this
+ */
 proto.entity.PayIdList.prototype.setNextListHash = function(value) {
-  jspb.Message.setProto3BytesField(this, 2, value);
+  return jspb.Message.setProto3BytesField(this, 2, value);
 };
 
 
@@ -1887,9 +1946,12 @@ proto.entity.TransferFunction.prototype.getLogicType = function() {
 };
 
 
-/** @param {!proto.entity.TransferFunctionType} value */
+/**
+ * @param {!proto.entity.TransferFunctionType} value
+ * @return {!proto.entity.TransferFunction} returns this
+ */
 proto.entity.TransferFunction.prototype.setLogicType = function(value) {
-  jspb.Message.setProto3EnumField(this, 1, value);
+  return jspb.Message.setProto3EnumField(this, 1, value);
 };
 
 
@@ -1903,17 +1965,21 @@ proto.entity.TransferFunction.prototype.getMaxTransfer = function() {
 };
 
 
-/** @param {?proto.entity.TokenTransfer|undefined} value */
+/**
+ * @param {?proto.entity.TokenTransfer|undefined} value
+ * @return {!proto.entity.TransferFunction} returns this
+*/
 proto.entity.TransferFunction.prototype.setMaxTransfer = function(value) {
-  jspb.Message.setWrapperField(this, 2, value);
+  return jspb.Message.setWrapperField(this, 2, value);
 };
 
 
 /**
  * Clears the message field making it undefined.
+ * @return {!proto.entity.TransferFunction} returns this
  */
 proto.entity.TransferFunction.prototype.clearMaxTransfer = function() {
-  this.setMaxTransfer(undefined);
+  return this.setMaxTransfer(undefined);
 };
 
 
@@ -1965,7 +2031,7 @@ proto.entity.ConditionalPay.prototype.toObject = function(opt_includeInstance) {
  */
 proto.entity.ConditionalPay.toObject = function(includeInstance, msg) {
   var f, obj = {
-    payTimestamp: jspb.Message.getFieldWithDefault(msg, 1, "0"),
+    payTimestamp: jspb.Message.getFieldWithDefault(msg, 1, 0),
     src: msg.getSrc_asB64(),
     dest: msg.getDest_asB64(),
     conditionsList: jspb.Message.toObjectList(msg.getConditionsList(),
@@ -2011,7 +2077,7 @@ proto.entity.ConditionalPay.deserializeBinaryFromReader = function(msg, reader) 
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readUint64String());
+      var value = /** @type {number} */ (reader.readUint64());
       msg.setPayTimestamp(value);
       break;
     case 2:
@@ -2074,8 +2140,8 @@ proto.entity.ConditionalPay.prototype.serializeBinary = function() {
 proto.entity.ConditionalPay.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getPayTimestamp();
-  if (parseInt(f, 10) !== 0) {
-    writer.writeUint64String(
+  if (f !== 0) {
+    writer.writeUint64(
       1,
       f
     );
@@ -2136,16 +2202,19 @@ proto.entity.ConditionalPay.serializeBinaryToWriter = function(message, writer) 
 
 /**
  * optional uint64 pay_timestamp = 1;
- * @return {string}
+ * @return {number}
  */
 proto.entity.ConditionalPay.prototype.getPayTimestamp = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, "0"));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
 
-/** @param {string} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.ConditionalPay} returns this
+ */
 proto.entity.ConditionalPay.prototype.setPayTimestamp = function(value) {
-  jspb.Message.setProto3StringIntField(this, 1, value);
+  return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
@@ -2182,9 +2251,12 @@ proto.entity.ConditionalPay.prototype.getSrc_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.ConditionalPay} returns this
+ */
 proto.entity.ConditionalPay.prototype.setSrc = function(value) {
-  jspb.Message.setProto3BytesField(this, 2, value);
+  return jspb.Message.setProto3BytesField(this, 2, value);
 };
 
 
@@ -2221,9 +2293,12 @@ proto.entity.ConditionalPay.prototype.getDest_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.ConditionalPay} returns this
+ */
 proto.entity.ConditionalPay.prototype.setDest = function(value) {
-  jspb.Message.setProto3BytesField(this, 3, value);
+  return jspb.Message.setProto3BytesField(this, 3, value);
 };
 
 
@@ -2237,9 +2312,12 @@ proto.entity.ConditionalPay.prototype.getConditionsList = function() {
 };
 
 
-/** @param {!Array<!proto.entity.Condition>} value */
+/**
+ * @param {!Array<!proto.entity.Condition>} value
+ * @return {!proto.entity.ConditionalPay} returns this
+*/
 proto.entity.ConditionalPay.prototype.setConditionsList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 4, value);
+  return jspb.Message.setRepeatedWrapperField(this, 4, value);
 };
 
 
@@ -2255,9 +2333,10 @@ proto.entity.ConditionalPay.prototype.addConditions = function(opt_value, opt_in
 
 /**
  * Clears the list making it empty but non-null.
+ * @return {!proto.entity.ConditionalPay} returns this
  */
 proto.entity.ConditionalPay.prototype.clearConditionsList = function() {
-  this.setConditionsList([]);
+  return this.setConditionsList([]);
 };
 
 
@@ -2271,17 +2350,21 @@ proto.entity.ConditionalPay.prototype.getTransferFunc = function() {
 };
 
 
-/** @param {?proto.entity.TransferFunction|undefined} value */
+/**
+ * @param {?proto.entity.TransferFunction|undefined} value
+ * @return {!proto.entity.ConditionalPay} returns this
+*/
 proto.entity.ConditionalPay.prototype.setTransferFunc = function(value) {
-  jspb.Message.setWrapperField(this, 5, value);
+  return jspb.Message.setWrapperField(this, 5, value);
 };
 
 
 /**
  * Clears the message field making it undefined.
+ * @return {!proto.entity.ConditionalPay} returns this
  */
 proto.entity.ConditionalPay.prototype.clearTransferFunc = function() {
-  this.setTransferFunc(undefined);
+  return this.setTransferFunc(undefined);
 };
 
 
@@ -2303,9 +2386,12 @@ proto.entity.ConditionalPay.prototype.getResolveDeadline = function() {
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.ConditionalPay} returns this
+ */
 proto.entity.ConditionalPay.prototype.setResolveDeadline = function(value) {
-  jspb.Message.setProto3IntField(this, 6, value);
+  return jspb.Message.setProto3IntField(this, 6, value);
 };
 
 
@@ -2318,9 +2404,12 @@ proto.entity.ConditionalPay.prototype.getResolveTimeout = function() {
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.ConditionalPay} returns this
+ */
 proto.entity.ConditionalPay.prototype.setResolveTimeout = function(value) {
-  jspb.Message.setProto3IntField(this, 7, value);
+  return jspb.Message.setProto3IntField(this, 7, value);
 };
 
 
@@ -2357,9 +2446,12 @@ proto.entity.ConditionalPay.prototype.getPayResolver_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.ConditionalPay} returns this
+ */
 proto.entity.ConditionalPay.prototype.setPayResolver = function(value) {
-  jspb.Message.setProto3BytesField(this, 8, value);
+  return jspb.Message.setProto3BytesField(this, 8, value);
 };
 
 
@@ -2520,9 +2612,12 @@ proto.entity.CondPayResult.prototype.getCondPay_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.CondPayResult} returns this
+ */
 proto.entity.CondPayResult.prototype.setCondPay = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -2559,9 +2654,12 @@ proto.entity.CondPayResult.prototype.getAmount_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.CondPayResult} returns this
+ */
 proto.entity.CondPayResult.prototype.setAmount = function(value) {
-  jspb.Message.setProto3BytesField(this, 2, value);
+  return jspb.Message.setProto3BytesField(this, 2, value);
 };
 
 
@@ -2734,9 +2832,12 @@ proto.entity.VouchedCondPayResult.prototype.getCondPayResult_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.VouchedCondPayResult} returns this
+ */
 proto.entity.VouchedCondPayResult.prototype.setCondPayResult = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -2773,9 +2874,12 @@ proto.entity.VouchedCondPayResult.prototype.getSigOfSrc_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.VouchedCondPayResult} returns this
+ */
 proto.entity.VouchedCondPayResult.prototype.setSigOfSrc = function(value) {
-  jspb.Message.setProto3BytesField(this, 2, value);
+  return jspb.Message.setProto3BytesField(this, 2, value);
 };
 
 
@@ -2812,9 +2916,12 @@ proto.entity.VouchedCondPayResult.prototype.getSigOfDest_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.VouchedCondPayResult} returns this
+ */
 proto.entity.VouchedCondPayResult.prototype.setSigOfDest = function(value) {
-  jspb.Message.setProto3BytesField(this, 3, value);
+  return jspb.Message.setProto3BytesField(this, 3, value);
 };
 
 
@@ -2999,9 +3106,12 @@ proto.entity.Condition.prototype.getConditionType = function() {
 };
 
 
-/** @param {!proto.entity.ConditionType} value */
+/**
+ * @param {!proto.entity.ConditionType} value
+ * @return {!proto.entity.Condition} returns this
+ */
 proto.entity.Condition.prototype.setConditionType = function(value) {
-  jspb.Message.setProto3EnumField(this, 1, value);
+  return jspb.Message.setProto3EnumField(this, 1, value);
 };
 
 
@@ -3038,9 +3148,12 @@ proto.entity.Condition.prototype.getHashLock_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.Condition} returns this
+ */
 proto.entity.Condition.prototype.setHashLock = function(value) {
-  jspb.Message.setProto3BytesField(this, 2, value);
+  return jspb.Message.setProto3BytesField(this, 2, value);
 };
 
 
@@ -3077,9 +3190,12 @@ proto.entity.Condition.prototype.getDeployedContractAddress_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.Condition} returns this
+ */
 proto.entity.Condition.prototype.setDeployedContractAddress = function(value) {
-  jspb.Message.setProto3BytesField(this, 3, value);
+  return jspb.Message.setProto3BytesField(this, 3, value);
 };
 
 
@@ -3116,9 +3232,12 @@ proto.entity.Condition.prototype.getVirtualContractAddress_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.Condition} returns this
+ */
 proto.entity.Condition.prototype.setVirtualContractAddress = function(value) {
-  jspb.Message.setProto3BytesField(this, 4, value);
+  return jspb.Message.setProto3BytesField(this, 4, value);
 };
 
 
@@ -3155,9 +3274,12 @@ proto.entity.Condition.prototype.getArgsQueryFinalization_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.Condition} returns this
+ */
 proto.entity.Condition.prototype.setArgsQueryFinalization = function(value) {
-  jspb.Message.setProto3BytesField(this, 5, value);
+  return jspb.Message.setProto3BytesField(this, 5, value);
 };
 
 
@@ -3194,9 +3316,12 @@ proto.entity.Condition.prototype.getArgsQueryOutcome_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.Condition} returns this
+ */
 proto.entity.Condition.prototype.setArgsQueryOutcome = function(value) {
-  jspb.Message.setProto3BytesField(this, 6, value);
+  return jspb.Message.setProto3BytesField(this, 6, value);
 };
 
 
@@ -3395,9 +3520,12 @@ proto.entity.CooperativeWithdrawInfo.prototype.getChannelId_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.CooperativeWithdrawInfo} returns this
+ */
 proto.entity.CooperativeWithdrawInfo.prototype.setChannelId = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -3410,9 +3538,12 @@ proto.entity.CooperativeWithdrawInfo.prototype.getSeqNum = function() {
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.CooperativeWithdrawInfo} returns this
+ */
 proto.entity.CooperativeWithdrawInfo.prototype.setSeqNum = function(value) {
-  jspb.Message.setProto3IntField(this, 2, value);
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
@@ -3426,17 +3557,21 @@ proto.entity.CooperativeWithdrawInfo.prototype.getWithdraw = function() {
 };
 
 
-/** @param {?proto.entity.AccountAmtPair|undefined} value */
+/**
+ * @param {?proto.entity.AccountAmtPair|undefined} value
+ * @return {!proto.entity.CooperativeWithdrawInfo} returns this
+*/
 proto.entity.CooperativeWithdrawInfo.prototype.setWithdraw = function(value) {
-  jspb.Message.setWrapperField(this, 3, value);
+  return jspb.Message.setWrapperField(this, 3, value);
 };
 
 
 /**
  * Clears the message field making it undefined.
+ * @return {!proto.entity.CooperativeWithdrawInfo} returns this
  */
 proto.entity.CooperativeWithdrawInfo.prototype.clearWithdraw = function() {
-  this.setWithdraw(undefined);
+  return this.setWithdraw(undefined);
 };
 
 
@@ -3458,9 +3593,12 @@ proto.entity.CooperativeWithdrawInfo.prototype.getWithdrawDeadline = function() 
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.CooperativeWithdrawInfo} returns this
+ */
 proto.entity.CooperativeWithdrawInfo.prototype.setWithdrawDeadline = function(value) {
-  jspb.Message.setProto3IntField(this, 4, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
@@ -3497,9 +3635,12 @@ proto.entity.CooperativeWithdrawInfo.prototype.getRecipientChannelId_asU8 = func
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.CooperativeWithdrawInfo} returns this
+ */
 proto.entity.CooperativeWithdrawInfo.prototype.setRecipientChannelId = function(value) {
-  jspb.Message.setProto3BytesField(this, 5, value);
+  return jspb.Message.setProto3BytesField(this, 5, value);
 };
 
 
@@ -3663,17 +3804,21 @@ proto.entity.PaymentChannelInitializer.prototype.getInitDistribution = function(
 };
 
 
-/** @param {?proto.entity.TokenDistribution|undefined} value */
+/**
+ * @param {?proto.entity.TokenDistribution|undefined} value
+ * @return {!proto.entity.PaymentChannelInitializer} returns this
+*/
 proto.entity.PaymentChannelInitializer.prototype.setInitDistribution = function(value) {
-  jspb.Message.setWrapperField(this, 1, value);
+  return jspb.Message.setWrapperField(this, 1, value);
 };
 
 
 /**
  * Clears the message field making it undefined.
+ * @return {!proto.entity.PaymentChannelInitializer} returns this
  */
 proto.entity.PaymentChannelInitializer.prototype.clearInitDistribution = function() {
-  this.setInitDistribution(undefined);
+  return this.setInitDistribution(undefined);
 };
 
 
@@ -3695,9 +3840,12 @@ proto.entity.PaymentChannelInitializer.prototype.getOpenDeadline = function() {
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.PaymentChannelInitializer} returns this
+ */
 proto.entity.PaymentChannelInitializer.prototype.setOpenDeadline = function(value) {
-  jspb.Message.setProto3IntField(this, 2, value);
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
@@ -3710,9 +3858,12 @@ proto.entity.PaymentChannelInitializer.prototype.getDisputeTimeout = function() 
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.PaymentChannelInitializer} returns this
+ */
 proto.entity.PaymentChannelInitializer.prototype.setDisputeTimeout = function(value) {
-  jspb.Message.setProto3IntField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
@@ -3725,9 +3876,12 @@ proto.entity.PaymentChannelInitializer.prototype.getMsgValueReceiver = function(
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.PaymentChannelInitializer} returns this
+ */
 proto.entity.PaymentChannelInitializer.prototype.setMsgValueReceiver = function(value) {
-  jspb.Message.setProto3IntField(this, 4, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
@@ -3922,9 +4076,12 @@ proto.entity.CooperativeSettleInfo.prototype.getChannelId_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.CooperativeSettleInfo} returns this
+ */
 proto.entity.CooperativeSettleInfo.prototype.setChannelId = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -3937,9 +4094,12 @@ proto.entity.CooperativeSettleInfo.prototype.getSeqNum = function() {
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.CooperativeSettleInfo} returns this
+ */
 proto.entity.CooperativeSettleInfo.prototype.setSeqNum = function(value) {
-  jspb.Message.setProto3IntField(this, 2, value);
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
@@ -3953,9 +4113,12 @@ proto.entity.CooperativeSettleInfo.prototype.getSettleBalanceList = function() {
 };
 
 
-/** @param {!Array<!proto.entity.AccountAmtPair>} value */
+/**
+ * @param {!Array<!proto.entity.AccountAmtPair>} value
+ * @return {!proto.entity.CooperativeSettleInfo} returns this
+*/
 proto.entity.CooperativeSettleInfo.prototype.setSettleBalanceList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 3, value);
+  return jspb.Message.setRepeatedWrapperField(this, 3, value);
 };
 
 
@@ -3971,9 +4134,10 @@ proto.entity.CooperativeSettleInfo.prototype.addSettleBalance = function(opt_val
 
 /**
  * Clears the list making it empty but non-null.
+ * @return {!proto.entity.CooperativeSettleInfo} returns this
  */
 proto.entity.CooperativeSettleInfo.prototype.clearSettleBalanceList = function() {
-  this.setSettleBalanceList([]);
+  return this.setSettleBalanceList([]);
 };
 
 
@@ -3986,9 +4150,12 @@ proto.entity.CooperativeSettleInfo.prototype.getSettleDeadline = function() {
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.CooperativeSettleInfo} returns this
+ */
 proto.entity.CooperativeSettleInfo.prototype.setSettleDeadline = function(value) {
-  jspb.Message.setProto3IntField(this, 4, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
@@ -4173,9 +4340,12 @@ proto.entity.ChannelMigrationInfo.prototype.getChannelId_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.ChannelMigrationInfo} returns this
+ */
 proto.entity.ChannelMigrationInfo.prototype.setChannelId = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -4212,9 +4382,12 @@ proto.entity.ChannelMigrationInfo.prototype.getFromLedgerAddress_asU8 = function
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.ChannelMigrationInfo} returns this
+ */
 proto.entity.ChannelMigrationInfo.prototype.setFromLedgerAddress = function(value) {
-  jspb.Message.setProto3BytesField(this, 2, value);
+  return jspb.Message.setProto3BytesField(this, 2, value);
 };
 
 
@@ -4251,9 +4424,12 @@ proto.entity.ChannelMigrationInfo.prototype.getToLedgerAddress_asU8 = function()
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.entity.ChannelMigrationInfo} returns this
+ */
 proto.entity.ChannelMigrationInfo.prototype.setToLedgerAddress = function(value) {
-  jspb.Message.setProto3BytesField(this, 3, value);
+  return jspb.Message.setProto3BytesField(this, 3, value);
 };
 
 
@@ -4266,9 +4442,12 @@ proto.entity.ChannelMigrationInfo.prototype.getMigrationDeadline = function() {
 };
 
 
-/** @param {number} value */
+/**
+ * @param {number} value
+ * @return {!proto.entity.ChannelMigrationInfo} returns this
+ */
 proto.entity.ChannelMigrationInfo.prototype.setMigrationDeadline = function(value) {
-  jspb.Message.setProto3IntField(this, 4, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 

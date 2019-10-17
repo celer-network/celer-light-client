@@ -24,14 +24,13 @@
  */
 
 import { ethers } from 'ethers';
-import { TransactionResponse } from 'ethers/providers';
-import { BigNumber, LogDescription } from 'ethers/utils';
+import { LogDescription } from 'ethers/utils';
 
-import celerLedgerAbi from '../abi/celer_ledger.json';
+import { CelerLedgerFactory } from '../abi/CelerLedgerFactory';
 import { ContractsInfo } from '../api/contracts_info';
-import { CryptoManager } from '../crypto/crypto_manager.js';
+import { CryptoManager } from '../crypto/crypto_manager';
 import { Database } from '../data/database';
-import { MessageManager } from '../messaging/message_manager.js';
+import { MessageManager } from '../messaging/message_manager';
 import { CooperativeWithdrawRequest as OnChainCooperativeWithdrawRequest } from '../protobufs/chain_pb';
 import {
   AccountAmtPair,
@@ -72,12 +71,11 @@ export class CooperativeWithdrawProcessor {
     amount: string
   ): Promise<string> {
     const channelIdBytes = ethers.utils.arrayify(channelId);
-    const celerLedger = new ethers.Contract(
+    const celerLedger = CelerLedgerFactory.connect(
       this.contractsInfo.celerLedgerAddress,
-      JSON.stringify(celerLedgerAbi),
       this.cryptoManager.provider
     );
-    let seqNum: BigNumber = await celerLedger.getCooperativeWithdrawSeqNum(
+    let seqNum = await celerLedger.functions.getCooperativeWithdrawSeqNum(
       channelIdBytes
     );
     seqNum = seqNum.add(1);
@@ -164,13 +162,12 @@ export class CooperativeWithdrawProcessor {
     onChainRequest.setWithdrawInfo(serializedWithdrawInfo);
     onChainRequest.setSigsList(sigsList);
 
-    const celerLedger = new ethers.Contract(
+    const celerLedger = CelerLedgerFactory.connect(
       this.contractsInfo.celerLedgerAddress,
-      JSON.stringify(celerLedgerAbi),
       this.cryptoManager.signer
     );
 
-    const tx: TransactionResponse = await celerLedger.cooperativeWithdraw(
+    const tx = await celerLedger.functions.cooperativeWithdraw(
       onChainRequest.serializeBinary()
     );
     const receipt = await tx.wait();
@@ -178,10 +175,12 @@ export class CooperativeWithdrawProcessor {
       throw new Error(`CooperativeWithdraw tx ${tx.hash} failed`);
     }
     const ledgerInterface = celerLedger.interface;
-    for (const log of receipt.logs) {
-      if (log.topics[0] === ledgerInterface.events.CooperativeWithdraw.topic) {
+    for (const event of receipt.events) {
+      if (
+        event.topics[0] === ledgerInterface.events.CooperativeWithdraw.topic
+      ) {
         await this.processCooperativeWithdrawEvent(
-          ledgerInterface.parseLog(log)
+          ledgerInterface.parseLog(event)
         );
         break;
       }

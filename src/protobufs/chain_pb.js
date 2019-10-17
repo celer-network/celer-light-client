@@ -330,9 +330,12 @@ proto.chain.OpenChannelRequest.prototype.getChannelInitializer_asU8 = function()
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.chain.OpenChannelRequest} returns this
+ */
 proto.chain.OpenChannelRequest.prototype.setChannelInitializer = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -369,26 +372,31 @@ proto.chain.OpenChannelRequest.prototype.getSigsList_asU8 = function() {
 };
 
 
-/** @param {!(Array<!Uint8Array>|Array<string>)} value */
+/**
+ * @param {!(Array<!Uint8Array>|Array<string>)} value
+ * @return {!proto.chain.OpenChannelRequest} returns this
+ */
 proto.chain.OpenChannelRequest.prototype.setSigsList = function(value) {
-  jspb.Message.setField(this, 2, value || []);
+  return jspb.Message.setField(this, 2, value || []);
 };
 
 
 /**
  * @param {!(string|Uint8Array)} value
  * @param {number=} opt_index
+ * @return {!proto.chain.OpenChannelRequest} returns this
  */
 proto.chain.OpenChannelRequest.prototype.addSigs = function(value, opt_index) {
-  jspb.Message.addToRepeatedField(this, 2, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
 };
 
 
 /**
  * Clears the list making it empty but non-null.
+ * @return {!proto.chain.OpenChannelRequest} returns this
  */
 proto.chain.OpenChannelRequest.prototype.clearSigsList = function() {
-  this.setSigsList([]);
+  return this.setSigsList([]);
 };
 
 
@@ -556,9 +564,12 @@ proto.chain.CooperativeWithdrawRequest.prototype.getWithdrawInfo_asU8 = function
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.chain.CooperativeWithdrawRequest} returns this
+ */
 proto.chain.CooperativeWithdrawRequest.prototype.setWithdrawInfo = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -595,26 +606,31 @@ proto.chain.CooperativeWithdrawRequest.prototype.getSigsList_asU8 = function() {
 };
 
 
-/** @param {!(Array<!Uint8Array>|Array<string>)} value */
+/**
+ * @param {!(Array<!Uint8Array>|Array<string>)} value
+ * @return {!proto.chain.CooperativeWithdrawRequest} returns this
+ */
 proto.chain.CooperativeWithdrawRequest.prototype.setSigsList = function(value) {
-  jspb.Message.setField(this, 2, value || []);
+  return jspb.Message.setField(this, 2, value || []);
 };
 
 
 /**
  * @param {!(string|Uint8Array)} value
  * @param {number=} opt_index
+ * @return {!proto.chain.CooperativeWithdrawRequest} returns this
  */
 proto.chain.CooperativeWithdrawRequest.prototype.addSigs = function(value, opt_index) {
-  jspb.Message.addToRepeatedField(this, 2, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
 };
 
 
 /**
  * Clears the list making it empty but non-null.
+ * @return {!proto.chain.CooperativeWithdrawRequest} returns this
  */
 proto.chain.CooperativeWithdrawRequest.prototype.clearSigsList = function() {
-  this.setSigsList([]);
+  return this.setSigsList([]);
 };
 
 
@@ -782,9 +798,12 @@ proto.chain.CooperativeSettleRequest.prototype.getSettleInfo_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.chain.CooperativeSettleRequest} returns this
+ */
 proto.chain.CooperativeSettleRequest.prototype.setSettleInfo = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -821,26 +840,31 @@ proto.chain.CooperativeSettleRequest.prototype.getSigsList_asU8 = function() {
 };
 
 
-/** @param {!(Array<!Uint8Array>|Array<string>)} value */
+/**
+ * @param {!(Array<!Uint8Array>|Array<string>)} value
+ * @return {!proto.chain.CooperativeSettleRequest} returns this
+ */
 proto.chain.CooperativeSettleRequest.prototype.setSigsList = function(value) {
-  jspb.Message.setField(this, 2, value || []);
+  return jspb.Message.setField(this, 2, value || []);
 };
 
 
 /**
  * @param {!(string|Uint8Array)} value
  * @param {number=} opt_index
+ * @return {!proto.chain.CooperativeSettleRequest} returns this
  */
 proto.chain.CooperativeSettleRequest.prototype.addSigs = function(value, opt_index) {
-  jspb.Message.addToRepeatedField(this, 2, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
 };
 
 
 /**
  * Clears the list making it empty but non-null.
+ * @return {!proto.chain.CooperativeSettleRequest} returns this
  */
 proto.chain.CooperativeSettleRequest.prototype.clearSigsList = function() {
-  this.setSigsList([]);
+  return this.setSigsList([]);
 };
 
 
@@ -1008,9 +1032,12 @@ proto.chain.ResolvePayByConditionsRequest.prototype.getCondPay_asU8 = function()
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.chain.ResolvePayByConditionsRequest} returns this
+ */
 proto.chain.ResolvePayByConditionsRequest.prototype.setCondPay = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -1047,26 +1074,31 @@ proto.chain.ResolvePayByConditionsRequest.prototype.getHashPreimagesList_asU8 = 
 };
 
 
-/** @param {!(Array<!Uint8Array>|Array<string>)} value */
+/**
+ * @param {!(Array<!Uint8Array>|Array<string>)} value
+ * @return {!proto.chain.ResolvePayByConditionsRequest} returns this
+ */
 proto.chain.ResolvePayByConditionsRequest.prototype.setHashPreimagesList = function(value) {
-  jspb.Message.setField(this, 2, value || []);
+  return jspb.Message.setField(this, 2, value || []);
 };
 
 
 /**
  * @param {!(string|Uint8Array)} value
  * @param {number=} opt_index
+ * @return {!proto.chain.ResolvePayByConditionsRequest} returns this
  */
 proto.chain.ResolvePayByConditionsRequest.prototype.addHashPreimages = function(value, opt_index) {
-  jspb.Message.addToRepeatedField(this, 2, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
 };
 
 
 /**
  * Clears the list making it empty but non-null.
+ * @return {!proto.chain.ResolvePayByConditionsRequest} returns this
  */
 proto.chain.ResolvePayByConditionsRequest.prototype.clearHashPreimagesList = function() {
-  this.setHashPreimagesList([]);
+  return this.setHashPreimagesList([]);
 };
 
 
@@ -1234,9 +1266,12 @@ proto.chain.SignedSimplexState.prototype.getSimplexState_asU8 = function() {
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.chain.SignedSimplexState} returns this
+ */
 proto.chain.SignedSimplexState.prototype.setSimplexState = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -1273,26 +1308,31 @@ proto.chain.SignedSimplexState.prototype.getSigsList_asU8 = function() {
 };
 
 
-/** @param {!(Array<!Uint8Array>|Array<string>)} value */
+/**
+ * @param {!(Array<!Uint8Array>|Array<string>)} value
+ * @return {!proto.chain.SignedSimplexState} returns this
+ */
 proto.chain.SignedSimplexState.prototype.setSigsList = function(value) {
-  jspb.Message.setField(this, 2, value || []);
+  return jspb.Message.setField(this, 2, value || []);
 };
 
 
 /**
  * @param {!(string|Uint8Array)} value
  * @param {number=} opt_index
+ * @return {!proto.chain.SignedSimplexState} returns this
  */
 proto.chain.SignedSimplexState.prototype.addSigs = function(value, opt_index) {
-  jspb.Message.addToRepeatedField(this, 2, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
 };
 
 
 /**
  * Clears the list making it empty but non-null.
+ * @return {!proto.chain.SignedSimplexState} returns this
  */
 proto.chain.SignedSimplexState.prototype.clearSigsList = function() {
-  this.setSigsList([]);
+  return this.setSigsList([]);
 };
 
 
@@ -1428,9 +1468,12 @@ proto.chain.SignedSimplexStateArray.prototype.getSignedSimplexStatesList = funct
 };
 
 
-/** @param {!Array<!proto.chain.SignedSimplexState>} value */
+/**
+ * @param {!Array<!proto.chain.SignedSimplexState>} value
+ * @return {!proto.chain.SignedSimplexStateArray} returns this
+*/
 proto.chain.SignedSimplexStateArray.prototype.setSignedSimplexStatesList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 1, value);
+  return jspb.Message.setRepeatedWrapperField(this, 1, value);
 };
 
 
@@ -1446,9 +1489,10 @@ proto.chain.SignedSimplexStateArray.prototype.addSignedSimplexStates = function(
 
 /**
  * Clears the list making it empty but non-null.
+ * @return {!proto.chain.SignedSimplexStateArray} returns this
  */
 proto.chain.SignedSimplexStateArray.prototype.clearSignedSimplexStatesList = function() {
-  this.setSignedSimplexStatesList([]);
+  return this.setSignedSimplexStatesList([]);
 };
 
 
@@ -1616,9 +1660,12 @@ proto.chain.ChannelMigrationRequest.prototype.getChannelMigrationInfo_asU8 = fun
 };
 
 
-/** @param {!(string|Uint8Array)} value */
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.chain.ChannelMigrationRequest} returns this
+ */
 proto.chain.ChannelMigrationRequest.prototype.setChannelMigrationInfo = function(value) {
-  jspb.Message.setProto3BytesField(this, 1, value);
+  return jspb.Message.setProto3BytesField(this, 1, value);
 };
 
 
@@ -1655,26 +1702,31 @@ proto.chain.ChannelMigrationRequest.prototype.getSigsList_asU8 = function() {
 };
 
 
-/** @param {!(Array<!Uint8Array>|Array<string>)} value */
+/**
+ * @param {!(Array<!Uint8Array>|Array<string>)} value
+ * @return {!proto.chain.ChannelMigrationRequest} returns this
+ */
 proto.chain.ChannelMigrationRequest.prototype.setSigsList = function(value) {
-  jspb.Message.setField(this, 2, value || []);
+  return jspb.Message.setField(this, 2, value || []);
 };
 
 
 /**
  * @param {!(string|Uint8Array)} value
  * @param {number=} opt_index
+ * @return {!proto.chain.ChannelMigrationRequest} returns this
  */
 proto.chain.ChannelMigrationRequest.prototype.addSigs = function(value, opt_index) {
-  jspb.Message.addToRepeatedField(this, 2, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
 };
 
 
 /**
  * Clears the list making it empty but non-null.
+ * @return {!proto.chain.ChannelMigrationRequest} returns this
  */
 proto.chain.ChannelMigrationRequest.prototype.clearSigsList = function() {
-  this.setSigsList([]);
+  return this.setSigsList([]);
 };
 
 

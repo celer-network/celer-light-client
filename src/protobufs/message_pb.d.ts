@@ -747,6 +747,218 @@ export namespace SignedDuplexState {
   }
 }
 
+export class PeerAddress extends jspb.Message {
+  getAddress(): string;
+  setAddress(value: string): void;
+
+  getTokenAddr(): string;
+  setTokenAddr(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): PeerAddress.AsObject;
+  static toObject(includeInstance: boolean, msg: PeerAddress): PeerAddress.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: PeerAddress, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): PeerAddress;
+  static deserializeBinaryFromReader(message: PeerAddress, reader: jspb.BinaryReader): PeerAddress;
+}
+
+export namespace PeerAddress {
+  export type AsObject = {
+    address: string,
+    tokenAddr: string,
+  }
+}
+
+export class PeerStatus extends jspb.Message {
+  getFreeBalance(): string;
+  setFreeBalance(value: string): void;
+
+  getJoinStatus(): JoinCelerStatusMap[keyof JoinCelerStatusMap];
+  setJoinStatus(value: JoinCelerStatusMap[keyof JoinCelerStatusMap]): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): PeerStatus.AsObject;
+  static toObject(includeInstance: boolean, msg: PeerStatus): PeerStatus.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: PeerStatus, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): PeerStatus;
+  static deserializeBinaryFromReader(message: PeerStatus, reader: jspb.BinaryReader): PeerStatus;
+}
+
+export namespace PeerStatus {
+  export type AsObject = {
+    freeBalance: string,
+    joinStatus: JoinCelerStatusMap[keyof JoinCelerStatusMap],
+  }
+}
+
+export class ChannelSummary extends jspb.Message {
+  getChannelId(): Uint8Array | string;
+  getChannelId_asU8(): Uint8Array;
+  getChannelId_asB64(): string;
+  setChannelId(value: Uint8Array | string): void;
+
+  getMySeqNum(): number;
+  setMySeqNum(value: number): void;
+
+  getPeerSeqNum(): number;
+  setPeerSeqNum(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ChannelSummary.AsObject;
+  static toObject(includeInstance: boolean, msg: ChannelSummary): ChannelSummary.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: ChannelSummary, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ChannelSummary;
+  static deserializeBinaryFromReader(message: ChannelSummary, reader: jspb.BinaryReader): ChannelSummary;
+}
+
+export namespace ChannelSummary {
+  export type AsObject = {
+    channelId: Uint8Array | string,
+    mySeqNum: number,
+    peerSeqNum: number,
+  }
+}
+
+export class HelloRequest extends jspb.Message {
+  getMyAddr(): Uint8Array | string;
+  getMyAddr_asU8(): Uint8Array;
+  getMyAddr_asB64(): string;
+  setMyAddr(value: Uint8Array | string): void;
+
+  getExpectPeer(): Uint8Array | string;
+  getExpectPeer_asU8(): Uint8Array;
+  getExpectPeer_asB64(): string;
+  setExpectPeer(value: Uint8Array | string): void;
+
+  getTimestamp(): number;
+  setTimestamp(value: number): void;
+
+  getMySig(): Uint8Array | string;
+  getMySig_asU8(): Uint8Array;
+  getMySig_asB64(): string;
+  setMySig(value: Uint8Array | string): void;
+
+  clearOpenChannelsList(): void;
+  getOpenChannelsList(): Array<ChannelSummary>;
+  setOpenChannelsList(value: Array<ChannelSummary>): void;
+  addOpenChannels(value?: ChannelSummary, index?: number): ChannelSummary;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): HelloRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: HelloRequest): HelloRequest.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: HelloRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): HelloRequest;
+  static deserializeBinaryFromReader(message: HelloRequest, reader: jspb.BinaryReader): HelloRequest;
+}
+
+export namespace HelloRequest {
+  export type AsObject = {
+    myAddr: Uint8Array | string,
+    expectPeer: Uint8Array | string,
+    timestamp: number,
+    mySig: Uint8Array | string,
+    openChannelsList: Array<ChannelSummary.AsObject>,
+  }
+}
+
+export class CelerChannelInHello extends jspb.Message {
+  getCid(): Uint8Array | string;
+  getCid_asU8(): Uint8Array;
+  getCid_asB64(): string;
+  setCid(value: Uint8Array | string): void;
+
+  clearCosignedStatesList(): void;
+  getCosignedStatesList(): Array<SignedSimplexState>;
+  setCosignedStatesList(value: Array<SignedSimplexState>): void;
+  addCosignedStates(value?: SignedSimplexState, index?: number): SignedSimplexState;
+
+  hasOpenChannelResponse(): boolean;
+  clearOpenChannelResponse(): void;
+  getOpenChannelResponse(): OpenChannelResponse | undefined;
+  setOpenChannelResponse(value?: OpenChannelResponse): void;
+
+  getChannelState(): string;
+  setChannelState(value: string): void;
+
+  clearPayBytesList(): void;
+  getPayBytesList(): Array<Uint8Array | string>;
+  getPayBytesList_asU8(): Array<Uint8Array>;
+  getPayBytesList_asB64(): Array<string>;
+  setPayBytesList(value: Array<Uint8Array | string>): void;
+  addPayBytes(value: Uint8Array | string, index?: number): Uint8Array | string;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CelerChannelInHello.AsObject;
+  static toObject(includeInstance: boolean, msg: CelerChannelInHello): CelerChannelInHello.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: CelerChannelInHello, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CelerChannelInHello;
+  static deserializeBinaryFromReader(message: CelerChannelInHello, reader: jspb.BinaryReader): CelerChannelInHello;
+}
+
+export namespace CelerChannelInHello {
+  export type AsObject = {
+    cid: Uint8Array | string,
+    cosignedStatesList: Array<SignedSimplexState.AsObject>,
+    openChannelResponse?: OpenChannelResponse.AsObject,
+    channelState: string,
+    payBytesList: Array<Uint8Array | string>,
+  }
+}
+
+export class HelloResponse extends jspb.Message {
+  getOk(): boolean;
+  setOk(value: boolean): void;
+
+  getError(): string;
+  setError(value: string): void;
+
+  clearCosignedStatesList(): void;
+  getCosignedStatesList(): Array<SignedSimplexState>;
+  setCosignedStatesList(value: Array<SignedSimplexState>): void;
+  addCosignedStates(value?: SignedSimplexState, index?: number): SignedSimplexState;
+
+  clearPayBytesList(): void;
+  getPayBytesList(): Array<Uint8Array | string>;
+  getPayBytesList_asU8(): Array<Uint8Array>;
+  getPayBytesList_asB64(): Array<string>;
+  setPayBytesList(value: Array<Uint8Array | string>): void;
+  addPayBytes(value: Uint8Array | string, index?: number): Uint8Array | string;
+
+  clearChannelInHelloList(): void;
+  getChannelInHelloList(): Array<CelerChannelInHello>;
+  setChannelInHelloList(value: Array<CelerChannelInHello>): void;
+  addChannelInHello(value?: CelerChannelInHello, index?: number): CelerChannelInHello;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): HelloResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: HelloResponse): HelloResponse.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: HelloResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): HelloResponse;
+  static deserializeBinaryFromReader(message: HelloResponse, reader: jspb.BinaryReader): HelloResponse;
+}
+
+export namespace HelloResponse {
+  export type AsObject = {
+    ok: boolean,
+    error: string,
+    cosignedStatesList: Array<SignedSimplexState.AsObject>,
+    payBytesList: Array<Uint8Array | string>,
+    channelInHelloList: Array<CelerChannelInHello.AsObject>,
+  }
+}
+
 export interface ErrCodeMap {
   OK: 0;
   UNAUTHORIZED: 1;
@@ -787,4 +999,12 @@ export interface OpenChannelStatusMap {
 }
 
 export const OpenChannelStatus: OpenChannelStatusMap;
+
+export interface JoinCelerStatusMap {
+  NOT_JOIN: 0;
+  LOCAL: 1;
+  REMOTE: 2;
+}
+
+export const JoinCelerStatus: JoinCelerStatusMap;
 

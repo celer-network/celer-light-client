@@ -24,25 +24,17 @@
  */
 
 import { ethers, Signer } from 'ethers';
-import { JsonRpcProvider, TransactionResponse } from 'ethers/providers';
-import { BigNumber } from 'ethers/utils';
 
-import erc20Abi from '../abi/erc20.json';
-import { ContractsInfo } from '../api/contracts_info.js';
+import { Erc20Factory } from '../abi/Erc20Factory';
+import { ContractsInfo } from '../api/contracts_info';
 
 const APPROVAL_AMOUNT = ethers.utils.parseEther('1e32');
 
 export class ApproveErc20Processor {
-  private readonly provider: JsonRpcProvider;
   private readonly signer: Signer;
   private readonly contractsInfo: ContractsInfo;
 
-  constructor(
-    provider: JsonRpcProvider,
-    signer: Signer,
-    contractsInfo: ContractsInfo
-  ) {
-    this.provider = provider;
+  constructor(signer: Signer, contractsInfo: ContractsInfo) {
     this.signer = signer;
     this.contractsInfo = contractsInfo;
   }
@@ -52,14 +44,10 @@ export class ApproveErc20Processor {
     const ledgerAddress = ethers.utils.getAddress(
       this.contractsInfo.celerLedgerAddress
     );
-    const tokenContract = new ethers.Contract(
-      tokenAddress,
-      JSON.stringify(erc20Abi),
-      signer
-    );
+    const tokenContract = Erc20Factory.connect(tokenAddress, signer);
 
     const selfAddress = await signer.getAddress();
-    const allowance: BigNumber = await tokenContract.allowance(
+    const allowance = await tokenContract.functions.allowance(
       selfAddress,
       ledgerAddress
     );
@@ -67,7 +55,7 @@ export class ApproveErc20Processor {
       return '';
     }
 
-    const tx: TransactionResponse = await tokenContract.approve(
+    const tx = await tokenContract.functions.approve(
       ledgerAddress,
       APPROVAL_AMOUNT
     );

@@ -24,11 +24,11 @@
  */
 
 import { ethers, Signer } from 'ethers';
-import { TransactionRequest, TransactionResponse } from 'ethers/providers';
 import { BigNumber, LogDescription } from 'ethers/utils';
 
-import celerLedgerAbi from '../abi/celer_ledger.json';
-import { ContractsInfo } from '../api/contracts_info.js';
+import { CelerLedgerFactory } from '../abi/CelerLedgerFactory';
+import { TransactionOverrides } from '../abi/index';
+import { ContractsInfo } from '../api/contracts_info';
 import { Database } from '../data/database';
 import { TokenType, TokenTypeMap } from '../protobufs/entity_pb';
 import * as errorUtils from '../utils/errors';
@@ -67,21 +67,18 @@ export class DepositProcessor {
     amount: BigNumber
   ): Promise<string> {
     const signer = this.signer;
-    const celerLedger = new ethers.Contract(
+    const celerLedger = CelerLedgerFactory.connect(
       this.contractsInfo.celerLedgerAddress,
-      JSON.stringify(celerLedgerAbi),
       signer
     );
-
-    const overrides: TransactionRequest = {};
+    const overrides: TransactionOverrides = {};
     let transferFromAmount = amount;
     if (tokenType === TokenType.ETH) {
       overrides.value = amount;
       transferFromAmount = ethers.utils.bigNumberify(0);
     }
 
-    const selfAddress = await signer.getAddress();
-    const tx: TransactionResponse = await celerLedger.deposit(
+    const tx = await celerLedger.functions.deposit(
       ethers.utils.arrayify(channelId),
       await signer.getAddress(),
       transferFromAmount,
@@ -92,9 +89,9 @@ export class DepositProcessor {
       throw new Error(`Deposit tx ${tx.hash} failed`);
     }
     const ledgerInterface = celerLedger.interface;
-    for (const log of receipt.logs) {
-      if (log.topics[0] === ledgerInterface.events.Deposit.topic) {
-        await this.processDepositEvent(ledgerInterface.parseLog(log));
+    for (const event of receipt.events) {
+      if (event.topics[0] === ledgerInterface.events.Deposit.topic) {
+        await this.processDepositEvent(ledgerInterface.parseLog(event));
         break;
       }
     }

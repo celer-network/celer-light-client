@@ -24,16 +24,12 @@
  */
 
 import { ethers } from 'ethers';
-import {
-  JsonRpcProvider,
-  TransactionRequest,
-  TransactionResponse
-} from 'ethers/providers';
 import { BigNumber, LogDescription } from 'ethers/utils';
 
-import celerLedgerAbi from '../abi/celer_ledger.json';
+import { CelerLedgerFactory } from '../abi/CelerLedgerFactory';
+import { TransactionOverrides } from '../abi/index';
 import { Config } from '../api/config';
-import { ContractsInfo } from '../api/contracts_info.js';
+import { ContractsInfo } from '../api/contracts_info';
 import { CryptoManager } from '../crypto/crypto_manager';
 import { Database } from '../data/database';
 import { DepositWithdrawal } from '../data/deposit_withdrawal';
@@ -175,31 +171,27 @@ export class OpenChannelProcessor {
     request.setSigsList(sigsList);
     const requestBytes = request.serializeBinary();
 
-    const celerLedger = new ethers.Contract(
+    const celerLedger = CelerLedgerFactory.connect(
       this.contractsInfo.celerLedgerAddress,
-      JSON.stringify(celerLedgerAbi),
       this.cryptoManager.signer
     );
 
-    const overrides: TransactionRequest = {};
+    const overrides: TransactionOverrides = {};
     if (tokenType === TokenType.ETH) {
       overrides.value = selfAmount;
     }
 
-    const tx: TransactionResponse = await celerLedger.openChannel(
-      requestBytes,
-      overrides
-    );
+    const tx = await celerLedger.functions.openChannel(requestBytes, overrides);
     const receipt = await tx.wait();
     if (receipt.status === 0) {
       throw new Error(`OpenChannel tx ${tx.hash} failed`);
     }
     const ledgerInterface = celerLedger.interface;
     let channelId: string;
-    for (const log of receipt.logs) {
-      if (log.topics[0] === ledgerInterface.events.OpenChannel.topic) {
+    for (const event of receipt.events) {
+      if (event.topics[0] === ledgerInterface.events.OpenChannel.topic) {
         channelId = await this.processOpenChannelEvent(
-          ledgerInterface.parseLog(log)
+          ledgerInterface.parseLog(event)
         );
         break;
       }
