@@ -674,6 +674,16 @@ export class CondPayReceipt extends jspb.Message {
   getPayDestSig_asB64(): string;
   setPayDestSig(value: Uint8Array | string): void;
 
+  getPayDelegatorSig(): Uint8Array | string;
+  getPayDelegatorSig_asU8(): Uint8Array;
+  getPayDelegatorSig_asB64(): string;
+  setPayDelegatorSig(value: Uint8Array | string): void;
+
+  hasDelegationProof(): boolean;
+  clearDelegationProof(): void;
+  getDelegationProof(): DelegationProof | undefined;
+  setDelegationProof(value?: DelegationProof): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): CondPayReceipt.AsObject;
   static toObject(includeInstance: boolean, msg: CondPayReceipt): CondPayReceipt.AsObject;
@@ -688,6 +698,8 @@ export namespace CondPayReceipt {
   export type AsObject = {
     payId: Uint8Array | string,
     payDestSig: Uint8Array | string,
+    payDelegatorSig: Uint8Array | string,
+    delegationProof?: DelegationProof.AsObject,
   }
 }
 
@@ -956,6 +968,166 @@ export namespace HelloResponse {
     cosignedStatesList: Array<SignedSimplexState.AsObject>,
     payBytesList: Array<Uint8Array | string>,
     channelInHelloList: Array<CelerChannelInHello.AsObject>,
+  }
+}
+
+export class DelegationDescription extends jspb.Message {
+  getDelegator(): Uint8Array | string;
+  getDelegator_asU8(): Uint8Array;
+  getDelegator_asB64(): string;
+  setDelegator(value: Uint8Array | string): void;
+
+  getDelegatee(): Uint8Array | string;
+  getDelegatee_asU8(): Uint8Array;
+  getDelegatee_asB64(): string;
+  setDelegatee(value: Uint8Array | string): void;
+
+  getExpiresAfterBlock(): number;
+  setExpiresAfterBlock(value: number): void;
+
+  clearTokenToDelegateList(): void;
+  getTokenToDelegateList(): Array<Uint8Array | string>;
+  getTokenToDelegateList_asU8(): Array<Uint8Array>;
+  getTokenToDelegateList_asB64(): Array<string>;
+  setTokenToDelegateList(value: Array<Uint8Array | string>): void;
+  addTokenToDelegate(value: Uint8Array | string, index?: number): Uint8Array | string;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DelegationDescription.AsObject;
+  static toObject(includeInstance: boolean, msg: DelegationDescription): DelegationDescription.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: DelegationDescription, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DelegationDescription;
+  static deserializeBinaryFromReader(message: DelegationDescription, reader: jspb.BinaryReader): DelegationDescription;
+}
+
+export namespace DelegationDescription {
+  export type AsObject = {
+    delegator: Uint8Array | string,
+    delegatee: Uint8Array | string,
+    expiresAfterBlock: number,
+    tokenToDelegateList: Array<Uint8Array | string>,
+  }
+}
+
+export class DelegationProof extends jspb.Message {
+  getDelegationDescriptionBytes(): Uint8Array | string;
+  getDelegationDescriptionBytes_asU8(): Uint8Array;
+  getDelegationDescriptionBytes_asB64(): string;
+  setDelegationDescriptionBytes(value: Uint8Array | string): void;
+
+  getSignature(): Uint8Array | string;
+  getSignature_asU8(): Uint8Array;
+  getSignature_asB64(): string;
+  setSignature(value: Uint8Array | string): void;
+
+  getSigner(): Uint8Array | string;
+  getSigner_asU8(): Uint8Array;
+  getSigner_asB64(): string;
+  setSigner(value: Uint8Array | string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DelegationProof.AsObject;
+  static toObject(includeInstance: boolean, msg: DelegationProof): DelegationProof.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: DelegationProof, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DelegationProof;
+  static deserializeBinaryFromReader(message: DelegationProof, reader: jspb.BinaryReader): DelegationProof;
+}
+
+export namespace DelegationProof {
+  export type AsObject = {
+    delegationDescriptionBytes: Uint8Array | string,
+    signature: Uint8Array | string,
+    signer: Uint8Array | string,
+  }
+}
+
+export class DelegationRequest extends jspb.Message {
+  hasProof(): boolean;
+  clearProof(): void;
+  getProof(): DelegationProof | undefined;
+  setProof(value?: DelegationProof): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DelegationRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: DelegationRequest): DelegationRequest.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: DelegationRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DelegationRequest;
+  static deserializeBinaryFromReader(message: DelegationRequest, reader: jspb.BinaryReader): DelegationRequest;
+}
+
+export namespace DelegationRequest {
+  export type AsObject = {
+    proof?: DelegationProof.AsObject,
+  }
+}
+
+export class DelegationResponse extends jspb.Message {
+  getError(): string;
+  setError(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DelegationResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: DelegationResponse): DelegationResponse.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: DelegationResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DelegationResponse;
+  static deserializeBinaryFromReader(message: DelegationResponse, reader: jspb.BinaryReader): DelegationResponse;
+}
+
+export namespace DelegationResponse {
+  export type AsObject = {
+    error: string,
+  }
+}
+
+export class QueryDelegationRequest extends jspb.Message {
+  getDelegatee(): Uint8Array | string;
+  getDelegatee_asU8(): Uint8Array;
+  getDelegatee_asB64(): string;
+  setDelegatee(value: Uint8Array | string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): QueryDelegationRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: QueryDelegationRequest): QueryDelegationRequest.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: QueryDelegationRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): QueryDelegationRequest;
+  static deserializeBinaryFromReader(message: QueryDelegationRequest, reader: jspb.BinaryReader): QueryDelegationRequest;
+}
+
+export namespace QueryDelegationRequest {
+  export type AsObject = {
+    delegatee: Uint8Array | string,
+  }
+}
+
+export class QueryDelegationResponse extends jspb.Message {
+  hasProof(): boolean;
+  clearProof(): void;
+  getProof(): DelegationProof | undefined;
+  setProof(value?: DelegationProof): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): QueryDelegationResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: QueryDelegationResponse): QueryDelegationResponse.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: QueryDelegationResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): QueryDelegationResponse;
+  static deserializeBinaryFromReader(message: QueryDelegationResponse, reader: jspb.BinaryReader): QueryDelegationResponse;
+}
+
+export namespace QueryDelegationResponse {
+  export type AsObject = {
+    proof?: DelegationProof.AsObject,
   }
 }
 

@@ -27,8 +27,7 @@ import { ethers } from 'ethers';
 import { JsonRpcProvider } from 'ethers/providers';
 import { BigNumber } from 'ethers/utils';
 
-import payRegistryAbi from '../abi/pay_registry.json';
-import { PayRegistryFactory } from '../abi/PayRegistryFactory.js';
+import { PayRegistryFactory } from '../abi/PayRegistryFactory';
 import { ContractsInfo } from '../api/contracts_info';
 
 export class OnChainPaymentInfo {
