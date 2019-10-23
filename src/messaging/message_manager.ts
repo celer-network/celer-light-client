@@ -34,7 +34,10 @@ import {
   OpenChannelRequest,
   OpenChannelResponse
 } from '../protobufs/message_pb';
-import { WebProxyRpcClient } from '../protobufs/web_proxy_pb_service';
+import {
+  ResponseStream,
+  WebProxyRpcClient
+} from '../protobufs/web_proxy_pb_service';
 
 interface MessageHandler {
   handle: (message: CelerMsg) => Promise<void>;
@@ -46,6 +49,7 @@ export class MessageManager {
   private readonly messageQueue: CelerMsg[];
   private metadata: grpc.Metadata;
   private dispatcherSpawned: boolean;
+  private subscribeStream: ResponseStream<CelerMsg>;
 
   constructor(config: Config) {
     this.rpcClient = new WebProxyRpcClient(config.ospNetworkAddress);
@@ -103,10 +107,17 @@ export class MessageManager {
         this.dispatchMessages();
       }
     });
+    this.subscribeStream = stream;
   }
 
   setHandler(messageCase: CelerMsg.MessageCase, handler: MessageHandler): void {
     this.handlers.set(messageCase, handler);
+  }
+
+  close(): void {
+    if (this.subscribeStream) {
+      this.subscribeStream.cancel();
+    }
   }
 
   private async dispatchMessages() {

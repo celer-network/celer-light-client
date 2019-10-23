@@ -19,9 +19,9 @@
     "demo": "yarn run build && npx parcel serve --no-hmr -d demo_out demo/index.html",
     "docs": "npx typedoc --name \"Celer Light Client API Docs\" --out docs --excludePrivate --disableOutputCheck --theme node_modules/typedoc-thunder-theme/bin/default src",
     "watch": "npx parcel watch demo/index.html",
-    "generate:contract-bindings": "./node_modules/.bin/typechain --target ethers --outDir src/abi 'src/abi/*.json'",
+    "generate:contract-bindings": "typechain --target ethers --outDir src/abi 'src/abi/*.json'",
     "generate:proto-bindings": "scripts/generate_proto_bindings.sh",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "scripts/run_integration_tests.sh"
   },
   "browser": "browser/browser.js",
   "browserslist": [
@@ -33,11 +33,15 @@
   ],
   "types": "dist/index.d.ts",
   "devDependencies": {
+    "@types/jest": "^24.0.19",
+    "fake-indexeddb": "^2.1.1",
+    "jest": "^24.9.0",
     "parcel-bundler": "^1.12.4",
+    "ts-jest": "^24.1.0",
     "typechain": "^0.3.21",
     "typedoc": "^0.15.0",
     "typedoc-thunder-theme": "^0.0.2",
-    "typescript": "^3.6.3"
+    "typescript": "^3.6.4"
   },
   "dependencies": {
     "@improbable-eng/grpc-web": "^0.11.0",

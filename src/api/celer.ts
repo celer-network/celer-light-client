@@ -253,6 +253,7 @@ export class Celer {
       signer = provider.getSigner(account);
     } else if (typeUtils.isAddress(account)) {
       const accounts = await provider.listAccounts();
+      console.log(accounts);
       if (!accounts.includes(account)) {
         throw new Error(`Unknown account ${account} in provider`);
       }
@@ -458,5 +459,14 @@ export class Celer {
    */
   removeHashlockCondition(condition: Condition): Promise<void> {
     return HashLock.removeHashLockCondition(this.db, condition);
+  }
+
+  /**
+   * Closes the database connection.
+   * NOTE: Should be only used in tests.
+   */
+  close(): void {
+    this.messageManager.close();
+    this.db.close();
   }
 }
