@@ -57,13 +57,18 @@ import { GetPaymentInfoProcessor } from '../processors/get_payment_info_processo
 import { OpenChannelProcessor } from '../processors/open_channel_processor';
 import { ResolvePaymentProcessor } from '../processors/resolve_payment_processor';
 import { SendPaymentProcessor } from '../processors/send_payment_processor';
+import { SettlePaymentProcessor } from '../processors/settle_payment_processor';
 import {
   Condition,
   TokenTypeMap,
   TransferFunctionType,
   TransferFunctionTypeMap
 } from '../protobufs/entity_pb';
-import { AuthReq, CelerMsg } from '../protobufs/message_pb';
+import {
+  AuthReq,
+  CelerMsg,
+  PaymentSettleReason
+} from '../protobufs/message_pb';
 import * as typeUtils from '../utils/types';
 import { Config } from './config';
 import { ContractsInfo } from './contracts_info';
@@ -83,6 +88,7 @@ export class Celer {
   private readonly cooperativeWithdrawProcessor: CooperativeWithdrawProcessor;
   private readonly sendPaymentProcessor: SendPaymentProcessor;
   private readonly resolvePaymentProcessor: ResolvePaymentProcessor;
+  private readonly settlePaymentProcessor: SettlePaymentProcessor;
   private readonly getPaymentChannelInfoProcessor: GetPaymentChannelInfoProcessor;
   private readonly getPaymentInfoProcessor: GetPaymentInfoProcessor;
 
@@ -400,6 +406,30 @@ export class Celer {
       conditions,
       timeout,
       note
+    );
+  }
+
+  /**
+   * Confirms an outgoing payment
+   *
+   * @param paymentId The payment ID
+   */
+  confirmOutgoingPayment(paymentId: string): Promise<void> {
+    return this.settlePaymentProcessor.settlePayment(
+      paymentId,
+      PaymentSettleReason.PAY_PAID_MAX
+    );
+  }
+
+  /**
+   * Rejects an incoming payment
+   *
+   * @param paymentId The payment ID
+   */
+  rejectIncomingPayment(paymentId: string): Promise<void> {
+    return this.settlePaymentProcessor.settlePayment(
+      paymentId,
+      PaymentSettleReason.PAY_REJECTED
     );
   }
 

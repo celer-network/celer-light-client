@@ -43,7 +43,7 @@ import {
 import * as errorUtils from '../../utils/errors';
 import { MessageManager } from '../message_manager';
 
-export interface PaymentSettlementInfo {
+export interface PaymentSettleRequestInfo {
   readonly payment: Payment;
   readonly settlementAmount: Uint8Array;
   readonly reason: PaymentSettleReasonMap[keyof PaymentSettleReasonMap];
@@ -69,14 +69,14 @@ export class PaymentSettleRequestSender {
 
   async sendPaymentSettleRequests(
     channelId: string,
-    settlementInfos: PaymentSettlementInfo[]
-  ) {
+    settleRequestInfos: PaymentSettleRequestInfo[]
+  ): Promise<void> {
     const db = this.db;
-    const payments = settlementInfos.map(info => info.payment);
-    const settlementAmounts = settlementInfos.map(
+    const payments = settleRequestInfos.map(info => info.payment);
+    const settlementAmounts = settleRequestInfos.map(
       info => info.settlementAmount
     );
-    const reasons = settlementInfos.map(info => info.reason);
+    const reasons = settleRequestInfos.map(info => info.reason);
     const [
       signedSimpleState,
       baseSeqNum

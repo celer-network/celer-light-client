@@ -23,42 +23,21 @@
  * IN THE SOFTWARE.
  */
 
-import { ethers } from 'ethers';
+import { PaymentSettleProofSender } from '../messaging/senders/payment_settle_proof_sender';
+import { PaymentSettleReasonMap } from '../protobufs/message_pb';
 
-import {
-  CelerMsg,
-  PaymentSettleProof,
-  PaymentSettleReasonMap,
-  SettledPayment
-} from '../../protobufs/message_pb';
-import { MessageManager } from '../message_manager';
+export class SettlePaymentProcessor {
+  private readonly paymentSettleProofSender: PaymentSettleProofSender;
 
-export interface PaymentSettleProofInfo {
-  paymentId: string;
-  reason: PaymentSettleReasonMap[keyof PaymentSettleReasonMap];
-}
-export class PaymentSettleProofSender {
-  private readonly messageManager: MessageManager;
-
-  constructor(messageManager: MessageManager) {
-    this.messageManager = messageManager;
+  constructor(paymentSettleProofSender: PaymentSettleProofSender) {
+    this.paymentSettleProofSender = paymentSettleProofSender;
   }
 
-  async sendPaymentSettleProofs(
-    settleProofInfos: PaymentSettleProofInfo[]
+  settlePayment(
+    paymentId: string,
+    reason: PaymentSettleReasonMap[keyof PaymentSettleReasonMap]
   ): Promise<void> {
-    const settledPaysList = [];
-    const proof = new PaymentSettleProof();
-    for (const info of settleProofInfos) {
-      const settledPayment = new SettledPayment();
-      settledPayment.setSettledPayId(ethers.utils.arrayify(info.paymentId));
-      settledPayment.setReason(info.reason);
-      settledPaysList.push(settledPayment);
-    }
-    proof.setSettledPaysList(settledPaysList);
-    const message = new CelerMsg();
-    message.setPaymentSettleProof(proof);
-    await this.messageManager.sendMessage(message);
-    // TODO(dominator008): Check if we need persistance here.
+    const info = { paymentId, reason };
+    return this.paymentSettleProofSender.sendPaymentSettleProofs([info]);
   }
 }

@@ -29,7 +29,7 @@ import { Database } from '../../data/database';
 import { ResolvePaymentProcessor } from '../../processors/resolve_payment_processor';
 import { CelerMsg, PaymentSettleReason } from '../../protobufs/message_pb';
 import {
-  PaymentSettlementInfo,
+  PaymentSettleRequestInfo,
   PaymentSettleRequestSender
 } from '../senders/payment_settle_request_sender';
 
@@ -59,7 +59,7 @@ export class PaymentSettleProofHandler {
       return;
     }
     const db = this.db;
-    const paymentSettlementInfos: PaymentSettlementInfo[] = [];
+    const paymentSettleRequestInfos: PaymentSettleRequestInfo[] = [];
     let channelId: string;
     for (const settledPayment of settledPaysList) {
       const paymentId = ethers.utils.hexlify(
@@ -92,19 +92,19 @@ export class PaymentSettleProofHandler {
           ) {
             break;
           }
-          paymentSettlementInfos.push(paymentSettlementInfo);
+          paymentSettleRequestInfos.push(paymentSettlementInfo);
           break;
         case PaymentSettleReason.PAY_EXPIRED:
         case PaymentSettleReason.PAY_DEST_UNREACHABLE:
         case PaymentSettleReason.PAY_REJECTED:
-          paymentSettlementInfos.push(paymentSettlementInfo);
+          paymentSettleRequestInfos.push(paymentSettlementInfo);
           break;
         default:
       }
     }
     await this.paymentSettleRequestSender.sendPaymentSettleRequests(
       channelId,
-      paymentSettlementInfos
+      paymentSettleRequestInfos
     );
   }
 }
