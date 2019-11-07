@@ -259,7 +259,6 @@ export class Celer {
       signer = provider.getSigner(account);
     } else if (typeUtils.isAddress(account)) {
       const accounts = await provider.listAccounts();
-      console.log(accounts);
       if (!accounts.includes(account)) {
         throw new Error(`Unknown account ${account} in provider`);
       }

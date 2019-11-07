@@ -1,10 +1,11 @@
 import { ethers, Wallet } from 'ethers';
+import { JsonRpcProvider } from 'ethers/providers';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 
-import { Celer, PaymentStatus, TokenType } from '../src/index';
+import { Celer, TokenType } from '../src/index';
 import { Invoice } from '../src/protobufs/invoice_pb';
-import config from './ropsten_config.json';
-import contractsInfo from './ropsten_contracts.json';
+import config from './local_config.json';
+import contractsInfo from './local_contracts.json';
 
 declare global {
   interface Window {
@@ -12,8 +13,6 @@ declare global {
     web3: { currentProvider: object };
     client: Celer;
     channelId: string;
-    redirectUrl: string;
-    connect: Function;
     openChannel: Function;
     deposit: Function;
     sendPayment: Function;
@@ -61,7 +60,6 @@ function deposit(): void {
 function sendPayment(): void {
   const client = window.client;
   updateBalance();
-  const amount = (document.getElementById('amount') as HTMLInputElement).value;
   const note = new Any();
   const invoice = new Invoice();
   invoice.setMemo(
@@ -74,7 +72,7 @@ function sendPayment(): void {
       TokenType.ETH,
       ethers.constants.AddressZero,
       (document.getElementById('recipient') as HTMLInputElement).value,
-      amount,
+      '1',
       note
     )
     .then(id => {
@@ -82,19 +80,10 @@ function sendPayment(): void {
       document.getElementById(
         'payment'
       ).textContent = `Payment ${paymentId} sent`;
-      const check = setInterval(async () => {
-        const paymentInfo = await client.getPaymentInfo(paymentId);
-        if (paymentInfo.status === PaymentStatus.CO_SIGNED_SETTLED) {
-          clearInterval(check);
-          if (window.redirectUrl) {
-            window.location.href = window.redirectUrl;
-          }
-        }
-      }, 1000);
     });
 }
 
-async function connect() {
+(async () => {
   if (
     typeof window.ethereum === 'undefined' &&
     typeof window.web3 === 'undefined'
@@ -105,12 +94,13 @@ async function connect() {
     window.ethereum.autoRefreshOnNetworkChange = false;
     await window.ethereum.enable();
   }
-  const provider = new ethers.providers.Web3Provider(
-    window['ethereum'] || window.web3.currentProvider
-  );
+  // const provider = new ethers.providers.Web3Provider(
+  //   window['ethereum'] || window.web3.currentProvider
+  // );
+  const wallet = await Wallet.fromEncryptedJson('', '');
   const client = await Celer.create(
-    provider,
-    provider.getSigner(),
+    'http://localhost:8545',
+    wallet,
     contractsInfo,
     config
   );
@@ -120,27 +110,8 @@ async function connect() {
   }, 1000);
 
   window.client = client;
-}
-
-(async () => {
-  const href = window.location.href;
-  const url = new URL(href);
-  const invoice = url.searchParams.get('invoice');
-  const recipient = url.searchParams.get('recipient');
-  const amount = url.searchParams.get('amount');
-  const redirectUrl = url.searchParams.get('redirect');
-  window.redirectUrl = redirectUrl;
-
-  window.onload = () => {
-    (document.getElementById(
-      'recipient'
-    ) as HTMLInputElement).value = recipient;
-    (document.getElementById('amount') as HTMLInputElement).value = amount;
-    (document.getElementById('invoice') as HTMLInputElement).value = invoice;
-  };
 })();
 
-window.connect = connect;
 window.openChannel = openChannel;
 window.deposit = deposit;
 window.sendPayment = sendPayment;

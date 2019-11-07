@@ -5,10 +5,13 @@
   </head>
   <body>
     <label>Recipient: </label><input type="text" id="recipient"></input>
+    <label>Amount: </label><input type="text" id="amount"></input>
+    <label>Invoice: </label><input type="text" id="invoice"></input>
     <br>
+    <button onclick="connect()">Connect Celer wallet</button>
     <button onclick="openChannel()">Open channel</button>
     <button onclick="deposit()">Deposit 100 wei</button>
-    <button onclick="sendPayment()">Send 1 wei</button>
+    <button onclick="sendPayment()">Send payment</button>
     <div id="channel"></div>
     <div id="deposit"></div>
     <div id="payment"></div>

@@ -16,6 +16,7 @@
     "bundle:browser": "npx parcel build -d browser --out-file browser.js --global celer src/index.ts",
     "bundle:node": "npx parcel build --target node src/index.ts",
     "build:demo": "yarn run build && npx parcel build --public-url '.' -d public_demo_out demo/index.html",
+    "build:shop-demo": "yarn run build && npx parcel build --public-url '.' -d public_demo_out demo/index.html demo/shop.html",
     "demo": "yarn run build && npx parcel serve --no-hmr -d demo_out demo/index.html",
     "docs": "npx typedoc --name \"Celer Light Client API Docs\" --out docs --excludePrivate --disableOutputCheck --theme node_modules/typedoc-thunder-theme/bin/default src",
     "watch": "npx parcel watch demo/index.html",
