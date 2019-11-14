@@ -2,7 +2,6 @@
   "name": "celer-light-client",
   "version": "0.15.0",
   "description": "Celer Light Client",
-  "main": "dist/index.js",
   "repository": "https://github.com/celer-network/celer-light-client",
   "author": {
     "name": "Michael Zhou",
@@ -10,7 +9,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "clean": "rm -rf browser dist ts_out demo_out",
+    "clean": "rm -rf browser dist demo_out",
     "compile": "npx tsc -p .",
     "build": "yarn run compile && yarn run bundle:browser && yarn run bundle:node",
     "bundle:browser": "npx parcel build -d browser --out-file browser.js --global celer src/index.ts",
@@ -32,7 +31,8 @@
     "last 2 Opera versions",
     "last 2 Edge versions"
   ],
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "devDependencies": {
     "@types/jest": "^24.0.19",
     "fake-indexeddb": "^2.1.1",

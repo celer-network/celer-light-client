@@ -3,7 +3,6 @@
 /browser/
 /dist/
 /*demo_out/
-/ts_out/
 node_modules/
 .vscode/*
 yarn-error.log
