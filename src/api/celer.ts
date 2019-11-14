@@ -342,6 +342,17 @@ export class Celer {
   }
 
   /**
+   * Cooperatively withdraw from a payment channel.
+   *
+   * @param channelId The channel ID.
+   * @param amount The amount to be withdrawn from the channel, in wei
+   * @returns The deposit transaction hash
+   */
+  cooperativeWithdraw(channelId: string, amount: string): Promise<string> {
+    return this.cooperativeWithdrawProcessor.cooperativeWithdraw(channelId, amount);
+  }
+
+  /**
    * Sends a payment with a single hash lock condition.
    *
    * @param tokenType The token type, currently supporting ETH and ERC20

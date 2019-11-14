@@ -44,7 +44,7 @@ import {
 import * as typeUtils from '../utils/types';
 
 const COOPERATIVE_WITHDRAW_TIMEOUT = 10;
-const WAIT_RESPONSE_INTERVAL = 100;
+const WAIT_RESPONSE_INTERVAL = 10;
 
 export class CooperativeWithdrawProcessor {
   private readonly db: Database;

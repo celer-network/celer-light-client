@@ -19,6 +19,7 @@ declare global {
     connect: Function;
     openChannel: Function;
     deposit: Function;
+    withdraw: Function;
     sendPayment: Function;
     updateBalance: Function;
   }
@@ -49,8 +50,13 @@ async function openChannel(): Promise<void> {
 }
 
 async function deposit(): Promise<void> {
-  const _ = await window.client.deposit(window.channelId, TokenType.ETH, '100');
-  document.getElementById('deposit').textContent = `Deposited 100 wei`;
+  await window.client.deposit(window.channelId, TokenType.ETH, '100');
+  document.getElementById('deposit').textContent = 'Deposited 100 wei';
+}
+
+async function withdraw(): Promise<void> {
+  await window.client.cooperativeWithdraw(window.channelId, '1');
+  document.getElementById('withdraw').textContent = 'Withdrew 1 wei';
 }
 
 async function sendPayment(): Promise<void> {
@@ -152,5 +158,6 @@ async function connect() {
 window.connect = connect;
 window.openChannel = openChannel;
 window.deposit = deposit;
+window.withdraw = withdraw;
 window.sendPayment = sendPayment;
 window.updateBalance = updateBalance;
