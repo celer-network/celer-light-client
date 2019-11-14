@@ -1,10 +1,13 @@
-import { ethers, Wallet } from 'ethers';
+import { ethers } from 'ethers';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 
-import { Celer, PaymentStatus, TokenType } from '../src/index';
+import { ContractsInfo } from '../src/api/contracts_info';
+import { Celer, Config, PaymentStatus, TokenType } from '../src/index';
 import { Invoice } from '../src/protobufs/invoice_pb';
-import config from './ropsten_config.json';
-import contractsInfo from './ropsten_contracts.json';
+import localConfig from './local_config.json';
+import localContractsInfo from './local_contracts.json';
+import ropstenConfig from './ropsten_config.json';
+import ropstenContractsInfo from './ropsten_contracts.json';
 
 declare global {
   interface Window {
@@ -21,46 +24,37 @@ declare global {
   }
 }
 
-function updateBalance(): void {
+async function updateBalance(): Promise<void> {
   if (window.channelId) {
-    window.client
-      .getPaymentChannelInfo(window.channelId)
-      .then(
-        info =>
-          (document.getElementById('balance').textContent = JSON.stringify(
-            info.balance
-          ))
-      )
-      .catch();
+    const paymentChannelInfo = await window.client.getPaymentChannelInfo(
+      window.channelId
+    );
+    document.getElementById('balance').textContent = JSON.stringify(
+      paymentChannelInfo.balance
+    );
   }
 }
 
-function openChannel(): void {
-  window.client
-    .openPaymentChannel(
-      TokenType.ETH,
-      ethers.constants.AddressZero,
-      '50000000000000000',
-      '50000000000000000'
-    )
-    .then(channelId => {
-      document.getElementById(
-        'channel'
-      ).textContent = `Channel ${channelId} opened`;
-      window.channelId = channelId;
-    });
+async function openChannel(): Promise<void> {
+  const channelId = await window.client.openPaymentChannel(
+    TokenType.ETH,
+    ethers.constants.AddressZero,
+    '50000000000000000',
+    '50000000000000000'
+  );
+  document.getElementById(
+    'channel'
+  ).textContent = `Channel ${channelId} opened`;
+  window.channelId = channelId;
 }
 
-function deposit(): void {
-  window.client.deposit(window.channelId, TokenType.ETH, '100').then(_ => {
-    document.getElementById('deposit').textContent = `Deposited 100 wei`;
-    updateBalance();
-  });
+async function deposit(): Promise<void> {
+  const _ = await window.client.deposit(window.channelId, TokenType.ETH, '100');
+  document.getElementById('deposit').textContent = `Deposited 100 wei`;
 }
 
-function sendPayment(): void {
+async function sendPayment(): Promise<void> {
   const client = window.client;
-  updateBalance();
   const amount = (document.getElementById('amount') as HTMLInputElement).value;
   const note = new Any();
   const invoice = new Invoice();
@@ -68,30 +62,23 @@ function sendPayment(): void {
     (document.getElementById('invoice') as HTMLInputElement).value
   );
   note.pack(invoice.serializeBinary(), 'invoice.Invoice');
-  let paymentId: string;
-  client
-    .sendPayment(
-      TokenType.ETH,
-      ethers.constants.AddressZero,
-      (document.getElementById('recipient') as HTMLInputElement).value,
-      amount,
-      note
-    )
-    .then(id => {
-      paymentId = id;
-      document.getElementById(
-        'payment'
-      ).textContent = `Payment ${paymentId} sent`;
-      const check = setInterval(async () => {
-        const paymentInfo = await client.getPaymentInfo(paymentId);
-        if (paymentInfo.status === PaymentStatus.CO_SIGNED_SETTLED) {
-          clearInterval(check);
-          if (window.redirectUrl) {
-            window.location.href = window.redirectUrl;
-          }
-        }
-      }, 1000);
-    });
+  const paymentId = await client.sendPayment(
+    TokenType.ETH,
+    ethers.constants.AddressZero,
+    (document.getElementById('recipient') as HTMLInputElement).value,
+    amount,
+    note
+  );
+  document.getElementById('payment').textContent = `Payment ${paymentId} sent`;
+  const check = setInterval(async () => {
+    const paymentInfo = await client.getPaymentInfo(paymentId);
+    if (paymentInfo.status === PaymentStatus.CO_SIGNED_SETTLED) {
+      clearInterval(check);
+      if (window.redirectUrl) {
+        window.location.href = window.redirectUrl;
+      }
+    }
+  }, 1000);
 }
 
 async function connect() {
@@ -108,6 +95,28 @@ async function connect() {
   const provider = new ethers.providers.Web3Provider(
     window['ethereum'] || window.web3.currentProvider
   );
+
+  let config: Config;
+  let contractsInfo: ContractsInfo;
+  const network = await provider.getNetwork();
+  switch (network.name) {
+    case 'ropsten':
+      config = ropstenConfig;
+      contractsInfo = ropstenContractsInfo;
+    default:
+      config = localConfig;
+      contractsInfo = localContractsInfo;
+  }
+
+  // Note: For using with a keystore JSON:
+  // const wallet = await Wallet.fromEncryptedJson('', '');
+  // const client = await Celer.create(
+  //   'http://localhost:8545',
+  //   wallet,
+  //   contractsInfo,
+  //   config
+  // );
+
   const client = await Celer.create(
     provider,
     provider.getSigner(),
