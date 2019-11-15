@@ -106,9 +106,6 @@ export class Celer {
     }
     const peerAddress = ethers.utils.getAddress(config.ospEthAddress);
     this.peerAddress = peerAddress;
-    if (!provider) {
-      provider = new JsonRpcProvider(config.ethJsonRpcUrl);
-    }
     const cryptoManager = new CryptoManager(provider, signer);
     this.cryptoManager = cryptoManager;
     const messageManager = new MessageManager(config);
@@ -229,19 +226,19 @@ export class Celer {
    * @param config The configuration object
    */
   static async create(
-    connection: JsonRpcProvider | AsyncSendable | string,
-    account: Signer | string | number,
+    connection: ethers.providers.JsonRpcProvider | AsyncSendable | string,
+    account: ethers.Signer | string | number,
     contractsInfo: ContractsInfo,
     config: Config
   ): Promise<Celer> {
-    let provider: JsonRpcProvider;
+    let provider: ethers.providers.JsonRpcProvider;
     if (connection instanceof ethers.providers.JsonRpcProvider) {
       provider = connection;
     } else if (typeof connection === 'string') {
-      provider = new JsonRpcProvider(connection);
+      provider = new ethers.providers.JsonRpcProvider(connection);
     } else {
       // Assume AsyncSendable
-      provider = new Web3Provider(connection);
+      provider = new ethers.providers.Web3Provider(connection);
     }
 
     // Connect signer to provider
@@ -349,7 +346,10 @@ export class Celer {
    * @returns The deposit transaction hash
    */
   cooperativeWithdraw(channelId: string, amount: string): Promise<string> {
-    return this.cooperativeWithdrawProcessor.cooperativeWithdraw(channelId, amount);
+    return this.cooperativeWithdrawProcessor.cooperativeWithdraw(
+      channelId,
+      amount
+    );
   }
 
   /**

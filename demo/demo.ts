@@ -99,7 +99,7 @@ async function connect() {
     await window.ethereum.enable();
   }
   const provider = new ethers.providers.Web3Provider(
-    window['ethereum'] || window.web3.currentProvider
+    window.ethereum || window.web3.currentProvider
   );
 
   let config: Config;

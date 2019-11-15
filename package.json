@@ -11,7 +11,7 @@
   "scripts": {
     "clean": "rm -rf browser dist demo_out",
     "compile": "npx tsc -p .",
-    "build": "yarn run compile && yarn run bundle:browser && yarn run bundle:node",
+    "build": "yarn run compile && yarn run bundle:browser && yarn run bundle:node && cp -a src/protobufs dist/src/protobufs",
     "bundle:browser": "npx parcel build -d browser --out-file browser.js --global celer src/index.ts",
     "bundle:node": "npx parcel build --target node src/index.ts",
     "build:demo": "yarn run build && npx parcel build --public-url '.' -d public_demo_out demo/index.html",
@@ -23,7 +23,6 @@
     "generate:proto-bindings": "scripts/generate_proto_bindings.sh",
     "test": "scripts/run_integration_tests.sh"
   },
-  "browser": "browser/browser.js",
   "browserslist": [
     "last 2 Chrome versions",
     "last 2 Firefox versions",
@@ -31,7 +30,8 @@
     "last 2 Opera versions",
     "last 2 Edge versions"
   ],
-  "main": "dist/src/index.js",
+  "browser": "browser/browser.js",
+  "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
   "devDependencies": {
     "@types/jest": "^24.0.19",
@@ -39,10 +39,10 @@
     "jest": "^24.9.0",
     "parcel-bundler": "^1.12.4",
     "ts-jest": "^24.1.0",
-    "typechain": "^0.3.21",
-    "typedoc": "^0.15.0",
+    "typechain": "^1.0.3",
+    "typedoc": "^0.15.2",
     "typedoc-thunder-theme": "^0.0.2",
-    "typescript": "^3.6.4"
+    "typescript": "^3.7.2"
   },
   "dependencies": {
     "@improbable-eng/grpc-web": "^0.11.0",
