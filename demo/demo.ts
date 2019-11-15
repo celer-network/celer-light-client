@@ -84,7 +84,7 @@ async function sendPayment(): Promise<void> {
         window.location.href = window.redirectUrl;
       }
     }
-  }, 1000);
+  }, 50);
 }
 
 async function connect() {
@@ -132,7 +132,7 @@ async function connect() {
 
   setInterval(() => {
     updateBalance();
-  }, 1000);
+  }, 100);
 
   window.client = client;
 }

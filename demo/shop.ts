@@ -23,7 +23,7 @@ async function check(paid: string) {
       ) as HTMLInputElement).textContent = `Invoice ${paid} paid with payment ID ${json['paymentId']}`;
       clearInterval(checker);
     }
-  }, 1000);
+  }, 100);
 }
 
 (async () => {
