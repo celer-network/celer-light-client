@@ -454,6 +454,23 @@ export class Celer {
   }
 
   /**
+   * Gets all payment channel IDs for a token
+   *
+   * @param tokenAddress The token address
+   * @returns The payment channel IDs
+   */
+  async getAllPaymentChannelIdsForToken(
+    tokenAddress: string
+  ): Promise<string[]> {
+    const selfAddress = await this.cryptoManager.signer.getAddress();
+    return this.getPaymentChannelInfoProcessor.getAllPaymentChannelIdsForToken(
+      selfAddress,
+      this.peerAddress,
+      tokenAddress
+    );
+  }
+
+  /**
    * Gets the info about a payment
    *
    * @param paymentId The payment ID

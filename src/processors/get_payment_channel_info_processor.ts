@@ -56,4 +56,19 @@ export class GetPaymentChannelInfoProcessor {
       balance: balanceInfo
     };
   }
+
+  async getAllPaymentChannelIdsForToken(
+    selfAddress: string,
+    peerAddress: string,
+    tokenAddress: string
+  ): Promise<string[]> {
+    const channels = await this.db.paymentChannels
+      .where({
+        selfAddress,
+        peerAddress,
+        tokenAddress
+      })
+      .toArray();
+    return channels.map(channel => channel.channelId);
+  }
 }
