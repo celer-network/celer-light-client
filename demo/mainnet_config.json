@@ -1,0 +1,10 @@
+{
+  "paymentChannelOpenTimeout": 100,
+  "paymentChannelDisputeTimeout": 10,
+  "paymentResolutionDisputeTimeout": 10,
+  "defaultPaymentTimeout": 50,
+  "maxPendingPayments": 200,
+  "ethJsonRpcUrl": "https://eth-mainnet.alchemyapi.io/jsonrpc/nBKDB3Ft5jAa-VmtGnrKtVpQ8u8eIgQ2",
+  "ospEthAddress": "0x33ebbb1d4d21e8626c4144ed737989c7532eb588",
+  "ospNetworkAddress": "https://web-proxy-mainnet.celer.app"
+}

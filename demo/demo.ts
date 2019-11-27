@@ -6,6 +6,8 @@ import { Celer, Config, PaymentStatus, TokenType } from '../src/index';
 import { Invoice } from '../src/protobufs/invoice_pb';
 import localConfig from './local_config.json';
 import localContractsInfo from './local_contracts.json';
+import mainnetConfig from './mainnet_config.json';
+import mainnetContractsInfo from './mainnet_contracts.json';
 import ropstenConfig from './ropsten_config.json';
 import ropstenContractsInfo from './ropsten_contracts.json';
 
@@ -106,6 +108,9 @@ async function connect() {
   let contractsInfo: ContractsInfo;
   const network = await provider.getNetwork();
   switch (network.name) {
+    case 'homestead':
+      config = mainnetConfig;
+      contractsInfo = mainnetContractsInfo;
     case 'ropsten':
       config = ropstenConfig;
       contractsInfo = ropstenContractsInfo;
