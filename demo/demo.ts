@@ -111,9 +111,11 @@ async function connect() {
     case 'homestead':
       config = mainnetConfig;
       contractsInfo = mainnetContractsInfo;
+      break;
     case 'ropsten':
       config = ropstenConfig;
       contractsInfo = ropstenContractsInfo;
+      break;
     default:
       config = localConfig;
       contractsInfo = localContractsInfo;
