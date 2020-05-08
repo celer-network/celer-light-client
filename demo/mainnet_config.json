@@ -4,7 +4,7 @@
   "paymentResolutionDisputeTimeout": 10,
   "defaultPaymentTimeout": 50,
   "maxPendingPayments": 200,
-  "ethJsonRpcUrl": "https://eth-mainnet.alchemyapi.io/jsonrpc/nBKDB3Ft5jAa-VmtGnrKtVpQ8u8eIgQ2",
+  "ethJsonRpcUrl": "https://mainnet.infura.io/v3/7b9c142998c444ebb5e30f3608c048b4",
   "ospEthAddress": "0x33ebbb1d4d21e8626c4144ed737989c7532eb588",
   "ospNetworkAddress": "https://web-proxy-mainnet.celer.app"
 }
