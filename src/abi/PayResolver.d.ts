@@ -12,6 +12,10 @@ import {
 
 interface PayResolverInterface extends Interface {
   functions: {
+    payRegistry: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    virtResolver: TypedFunctionDescription<{ encode([]: []): string }>;
+
     resolvePaymentByConditions: TypedFunctionDescription<{
       encode([_resolvePayRequest]: [Arrayish]): string;
     }>;
@@ -46,6 +50,10 @@ export class PayResolver extends Contract {
   interface: PayResolverInterface;
 
   functions: {
+    payRegistry(): Promise<string>;
+
+    virtResolver(): Promise<string>;
+
     resolvePaymentByConditions(
       _resolvePayRequest: Arrayish,
       overrides?: TransactionOverrides
@@ -55,10 +63,21 @@ export class PayResolver extends Contract {
       _vouchedPayResult: Arrayish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
-
-    payRegistry(): Promise<string>;
-    virtResolver(): Promise<string>;
   };
+
+  payRegistry(): Promise<string>;
+
+  virtResolver(): Promise<string>;
+
+  resolvePaymentByConditions(
+    _resolvePayRequest: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  resolvePaymentByVouchedResult(
+    _vouchedPayResult: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
 
   filters: {
     ResolvePayment(
@@ -69,6 +88,10 @@ export class PayResolver extends Contract {
   };
 
   estimate: {
+    payRegistry(): Promise<BigNumber>;
+
+    virtResolver(): Promise<BigNumber>;
+
     resolvePaymentByConditions(
       _resolvePayRequest: Arrayish
     ): Promise<BigNumber>;

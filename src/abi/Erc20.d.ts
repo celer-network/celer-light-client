@@ -12,16 +12,30 @@ import {
 
 interface Erc20Interface extends Interface {
   functions: {
+    name: TypedFunctionDescription<{ encode([]: []): string }>;
+
     approve: TypedFunctionDescription<{
       encode([_spender, _value]: [string, BigNumberish]): string;
     }>;
+
+    totalSupply: TypedFunctionDescription<{ encode([]: []): string }>;
 
     transferFrom: TypedFunctionDescription<{
       encode([_from, _to, _value]: [string, string, BigNumberish]): string;
     }>;
 
+    decimals: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    balanceOf: TypedFunctionDescription<{ encode([_owner]: [string]): string }>;
+
+    symbol: TypedFunctionDescription<{ encode([]: []): string }>;
+
     transfer: TypedFunctionDescription<{
       encode([_to, _value]: [string, BigNumberish]): string;
+    }>;
+
+    allowance: TypedFunctionDescription<{
+      encode([_owner, _spender]: [string, string]): string;
     }>;
   };
 
@@ -58,15 +72,15 @@ export class Erc20 extends Contract {
   interface: Erc20Interface;
 
   functions: {
-    balanceOf(_owner: string): Promise<BigNumber>;
-
-    allowance(_owner: string, _spender: string): Promise<BigNumber>;
+    name(): Promise<string>;
 
     approve(
       _spender: string,
       _value: BigNumberish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    totalSupply(): Promise<BigNumber>;
 
     transferFrom(
       _from: string,
@@ -75,17 +89,51 @@ export class Erc20 extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
+    decimals(): Promise<number>;
+
+    balanceOf(_owner: string): Promise<BigNumber>;
+
+    symbol(): Promise<string>;
+
     transfer(
       _to: string,
       _value: BigNumberish,
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    name(): Promise<string>;
-    totalSupply(): Promise<BigNumber>;
-    decimals(): Promise<number>;
-    symbol(): Promise<string>;
+    allowance(_owner: string, _spender: string): Promise<BigNumber>;
   };
+
+  name(): Promise<string>;
+
+  approve(
+    _spender: string,
+    _value: BigNumberish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  totalSupply(): Promise<BigNumber>;
+
+  transferFrom(
+    _from: string,
+    _to: string,
+    _value: BigNumberish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  decimals(): Promise<number>;
+
+  balanceOf(_owner: string): Promise<BigNumber>;
+
+  symbol(): Promise<string>;
+
+  transfer(
+    _to: string,
+    _value: BigNumberish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  allowance(_owner: string, _spender: string): Promise<BigNumber>;
 
   filters: {
     Approval(
@@ -98,7 +146,11 @@ export class Erc20 extends Contract {
   };
 
   estimate: {
+    name(): Promise<BigNumber>;
+
     approve(_spender: string, _value: BigNumberish): Promise<BigNumber>;
+
+    totalSupply(): Promise<BigNumber>;
 
     transferFrom(
       _from: string,
@@ -106,6 +158,14 @@ export class Erc20 extends Contract {
       _value: BigNumberish
     ): Promise<BigNumber>;
 
+    decimals(): Promise<BigNumber>;
+
+    balanceOf(_owner: string): Promise<BigNumber>;
+
+    symbol(): Promise<BigNumber>;
+
     transfer(_to: string, _value: BigNumberish): Promise<BigNumber>;
+
+    allowance(_owner: string, _spender: string): Promise<BigNumber>;
   };
 }

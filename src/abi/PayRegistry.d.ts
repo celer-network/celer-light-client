@@ -12,6 +12,12 @@ import {
 
 interface PayRegistryInterface extends Interface {
   functions: {
+    payInfoMap: TypedFunctionDescription<{ encode([]: [Arrayish]): string }>;
+
+    calculatePayId: TypedFunctionDescription<{
+      encode([_payHash, _setter]: [Arrayish, string]): string;
+    }>;
+
     setPayAmount: TypedFunctionDescription<{
       encode([_payHash, _amt]: [Arrayish, BigNumberish]): string;
     }>;
@@ -29,22 +35,30 @@ interface PayRegistryInterface extends Interface {
     }>;
 
     setPayAmounts: TypedFunctionDescription<{
-      encode([_payHashes, _amts]: [(Arrayish)[], (BigNumberish)[]]): string;
+      encode([_payHashes, _amts]: [Arrayish[], BigNumberish[]]): string;
     }>;
 
     setPayDeadlines: TypedFunctionDescription<{
-      encode([_payHashes, _deadlines]: [
-        (Arrayish)[],
-        (BigNumberish)[]
-      ]): string;
+      encode([_payHashes, _deadlines]: [Arrayish[], BigNumberish[]]): string;
     }>;
 
     setPayInfos: TypedFunctionDescription<{
       encode([_payHashes, _amts, _deadlines]: [
-        (Arrayish)[],
-        (BigNumberish)[],
-        (BigNumberish)[]
+        Arrayish[],
+        BigNumberish[],
+        BigNumberish[]
       ]): string;
+    }>;
+
+    getPayAmounts: TypedFunctionDescription<{
+      encode([_payIds, _lastPayResolveDeadline]: [
+        Arrayish[],
+        BigNumberish
+      ]): string;
+    }>;
+
+    getPayInfo: TypedFunctionDescription<{
+      encode([_payId]: [Arrayish]): string;
     }>;
   };
 
@@ -84,18 +98,6 @@ export class PayRegistry extends Contract {
 
     calculatePayId(_payHash: Arrayish, _setter: string): Promise<string>;
 
-    getPayAmounts(
-      _payIds: (Arrayish)[],
-      _lastPayResolveDeadline: BigNumberish
-    ): Promise<(BigNumber)[]>;
-
-    getPayInfo(
-      _payId: Arrayish
-    ): Promise<{
-      0: BigNumber;
-      1: BigNumber;
-    }>;
-
     setPayAmount(
       _payHash: Arrayish,
       _amt: BigNumberish,
@@ -116,24 +118,97 @@ export class PayRegistry extends Contract {
     ): Promise<ContractTransaction>;
 
     setPayAmounts(
-      _payHashes: (Arrayish)[],
-      _amts: (BigNumberish)[],
+      _payHashes: Arrayish[],
+      _amts: BigNumberish[],
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
     setPayDeadlines(
-      _payHashes: (Arrayish)[],
-      _deadlines: (BigNumberish)[],
+      _payHashes: Arrayish[],
+      _deadlines: BigNumberish[],
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
     setPayInfos(
-      _payHashes: (Arrayish)[],
-      _amts: (BigNumberish)[],
-      _deadlines: (BigNumberish)[],
+      _payHashes: Arrayish[],
+      _amts: BigNumberish[],
+      _deadlines: BigNumberish[],
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    getPayAmounts(
+      _payIds: Arrayish[],
+      _lastPayResolveDeadline: BigNumberish
+    ): Promise<BigNumber[]>;
+
+    getPayInfo(
+      _payId: Arrayish
+    ): Promise<{
+      0: BigNumber;
+      1: BigNumber;
+    }>;
   };
+
+  payInfoMap(
+    arg0: Arrayish
+  ): Promise<{
+    amount: BigNumber;
+    resolveDeadline: BigNumber;
+    0: BigNumber;
+    1: BigNumber;
+  }>;
+
+  calculatePayId(_payHash: Arrayish, _setter: string): Promise<string>;
+
+  setPayAmount(
+    _payHash: Arrayish,
+    _amt: BigNumberish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  setPayDeadline(
+    _payHash: Arrayish,
+    _deadline: BigNumberish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  setPayInfo(
+    _payHash: Arrayish,
+    _amt: BigNumberish,
+    _deadline: BigNumberish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  setPayAmounts(
+    _payHashes: Arrayish[],
+    _amts: BigNumberish[],
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  setPayDeadlines(
+    _payHashes: Arrayish[],
+    _deadlines: BigNumberish[],
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  setPayInfos(
+    _payHashes: Arrayish[],
+    _amts: BigNumberish[],
+    _deadlines: BigNumberish[],
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  getPayAmounts(
+    _payIds: Arrayish[],
+    _lastPayResolveDeadline: BigNumberish
+  ): Promise<BigNumber[]>;
+
+  getPayInfo(
+    _payId: Arrayish
+  ): Promise<{
+    0: BigNumber;
+    1: BigNumber;
+  }>;
 
   filters: {
     PayInfoUpdate(
@@ -144,6 +219,10 @@ export class PayRegistry extends Contract {
   };
 
   estimate: {
+    payInfoMap(arg0: Arrayish): Promise<BigNumber>;
+
+    calculatePayId(_payHash: Arrayish, _setter: string): Promise<BigNumber>;
+
     setPayAmount(_payHash: Arrayish, _amt: BigNumberish): Promise<BigNumber>;
 
     setPayDeadline(
@@ -158,19 +237,26 @@ export class PayRegistry extends Contract {
     ): Promise<BigNumber>;
 
     setPayAmounts(
-      _payHashes: (Arrayish)[],
-      _amts: (BigNumberish)[]
+      _payHashes: Arrayish[],
+      _amts: BigNumberish[]
     ): Promise<BigNumber>;
 
     setPayDeadlines(
-      _payHashes: (Arrayish)[],
-      _deadlines: (BigNumberish)[]
+      _payHashes: Arrayish[],
+      _deadlines: BigNumberish[]
     ): Promise<BigNumber>;
 
     setPayInfos(
-      _payHashes: (Arrayish)[],
-      _amts: (BigNumberish)[],
-      _deadlines: (BigNumberish)[]
+      _payHashes: Arrayish[],
+      _amts: BigNumberish[],
+      _deadlines: BigNumberish[]
     ): Promise<BigNumber>;
+
+    getPayAmounts(
+      _payIds: Arrayish[],
+      _lastPayResolveDeadline: BigNumberish
+    ): Promise<BigNumber>;
+
+    getPayInfo(_payId: Arrayish): Promise<BigNumber>;
   };
 }

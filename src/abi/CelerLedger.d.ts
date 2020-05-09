@@ -14,12 +14,16 @@ interface CelerLedgerInterface extends Interface {
   functions: {
     renounceOwnership: TypedFunctionDescription<{ encode([]: []): string }>;
 
+    owner: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    isOwner: TypedFunctionDescription<{ encode([]: []): string }>;
+
     transferOwnership: TypedFunctionDescription<{
       encode([newOwner]: [string]): string;
     }>;
 
     setBalanceLimits: TypedFunctionDescription<{
-      encode([_tokenAddrs, _limits]: [(string)[], (BigNumberish)[]]): string;
+      encode([_tokenAddrs, _limits]: [string[], BigNumberish[]]): string;
     }>;
 
     disableBalanceLimits: TypedFunctionDescription<{ encode([]: []): string }>;
@@ -40,9 +44,9 @@ interface CelerLedgerInterface extends Interface {
 
     depositInBatch: TypedFunctionDescription<{
       encode([_channelIds, _receivers, _transferFromAmounts]: [
-        (Arrayish)[],
-        (string)[],
-        (BigNumberish)[]
+        Arrayish[],
+        string[],
+        BigNumberish[]
       ]): string;
     }>;
 
@@ -96,6 +100,92 @@ interface CelerLedgerInterface extends Interface {
 
     migrateChannelFrom: TypedFunctionDescription<{
       encode([_fromLedgerAddr, _migrationRequest]: [string, Arrayish]): string;
+    }>;
+
+    getSettleFinalizedTime: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getTokenContract: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getTokenType: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getChannelStatus: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getCooperativeWithdrawSeqNum: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getTotalBalance: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getBalanceMap: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getChannelMigrationArgs: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getPeersMigrationInfo: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getDisputeTimeout: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getMigratedTo: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getStateSeqNumMap: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getTransferOutMap: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getNextPayIdListHashMap: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getLastPayResolveDeadlineMap: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getPendingPayOutMap: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getWithdrawIntent: TypedFunctionDescription<{
+      encode([_channelId]: [Arrayish]): string;
+    }>;
+
+    getChannelStatusNum: TypedFunctionDescription<{
+      encode([_channelStatus]: [BigNumberish]): string;
+    }>;
+
+    getEthPool: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    getPayRegistry: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    getCelerWallet: TypedFunctionDescription<{ encode([]: []): string }>;
+
+    getBalanceLimit: TypedFunctionDescription<{
+      encode([_tokenAddr]: [string]): string;
+    }>;
+
+    getBalanceLimitsEnabled: TypedFunctionDescription<{
+      encode([]: []): string;
     }>;
   };
 
@@ -241,101 +331,13 @@ export class CelerLedger extends Contract {
   interface: CelerLedgerInterface;
 
   functions: {
-    getSettleFinalizedTime(_channelId: Arrayish): Promise<BigNumber>;
-
-    getTokenContract(_channelId: Arrayish): Promise<string>;
-
-    getTokenType(_channelId: Arrayish): Promise<number>;
-
-    getChannelStatus(_channelId: Arrayish): Promise<number>;
-
-    getCooperativeWithdrawSeqNum(_channelId: Arrayish): Promise<BigNumber>;
-
-    getTotalBalance(_channelId: Arrayish): Promise<BigNumber>;
-
-    getBalanceMap(
-      _channelId: Arrayish
-    ): Promise<{
-      0: (string)[];
-      1: (BigNumber)[];
-      2: (BigNumber)[];
-    }>;
-
-    getChannelMigrationArgs(
-      _channelId: Arrayish
-    ): Promise<{
-      0: BigNumber;
-      1: BigNumber;
-      2: string;
-      3: BigNumber;
-    }>;
-
-    getPeersMigrationInfo(
-      _channelId: Arrayish
-    ): Promise<{
-      0: (string)[];
-      1: (BigNumber)[];
-      2: (BigNumber)[];
-      3: (BigNumber)[];
-      4: (BigNumber)[];
-      5: (BigNumber)[];
-    }>;
-
-    getDisputeTimeout(_channelId: Arrayish): Promise<BigNumber>;
-
-    getMigratedTo(_channelId: Arrayish): Promise<string>;
-
-    getStateSeqNumMap(
-      _channelId: Arrayish
-    ): Promise<{
-      0: (string)[];
-      1: (BigNumber)[];
-    }>;
-
-    getTransferOutMap(
-      _channelId: Arrayish
-    ): Promise<{
-      0: (string)[];
-      1: (BigNumber)[];
-    }>;
-
-    getNextPayIdListHashMap(
-      _channelId: Arrayish
-    ): Promise<{
-      0: (string)[];
-      1: (string)[];
-    }>;
-
-    getLastPayResolveDeadlineMap(
-      _channelId: Arrayish
-    ): Promise<{
-      0: (string)[];
-      1: (BigNumber)[];
-    }>;
-
-    getPendingPayOutMap(
-      _channelId: Arrayish
-    ): Promise<{
-      0: (string)[];
-      1: (BigNumber)[];
-    }>;
-
-    getWithdrawIntent(
-      _channelId: Arrayish
-    ): Promise<{
-      0: string;
-      1: BigNumber;
-      2: BigNumber;
-      3: string;
-    }>;
-
-    getChannelStatusNum(_channelStatus: BigNumberish): Promise<BigNumber>;
-
-    getBalanceLimit(_tokenAddr: string): Promise<BigNumber>;
-
     renounceOwnership(
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
+
+    owner(): Promise<string>;
+
+    isOwner(): Promise<boolean>;
 
     transferOwnership(
       newOwner: string,
@@ -343,8 +345,8 @@ export class CelerLedger extends Contract {
     ): Promise<ContractTransaction>;
 
     setBalanceLimits(
-      _tokenAddrs: (string)[],
-      _limits: (BigNumberish)[],
+      _tokenAddrs: string[],
+      _limits: BigNumberish[],
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
@@ -369,9 +371,9 @@ export class CelerLedger extends Contract {
     ): Promise<ContractTransaction>;
 
     depositInBatch(
-      _channelIds: (Arrayish)[],
-      _receivers: (string)[],
-      _transferFromAmounts: (BigNumberish)[],
+      _channelIds: Arrayish[],
+      _receivers: string[],
+      _transferFromAmounts: BigNumberish[],
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
@@ -435,13 +437,312 @@ export class CelerLedger extends Contract {
       overrides?: TransactionOverrides
     ): Promise<ContractTransaction>;
 
-    owner(): Promise<string>;
-    isOwner(): Promise<boolean>;
+    getSettleFinalizedTime(_channelId: Arrayish): Promise<BigNumber>;
+
+    getTokenContract(_channelId: Arrayish): Promise<string>;
+
+    getTokenType(_channelId: Arrayish): Promise<number>;
+
+    getChannelStatus(_channelId: Arrayish): Promise<number>;
+
+    getCooperativeWithdrawSeqNum(_channelId: Arrayish): Promise<BigNumber>;
+
+    getTotalBalance(_channelId: Arrayish): Promise<BigNumber>;
+
+    getBalanceMap(
+      _channelId: Arrayish
+    ): Promise<{
+      0: string[];
+      1: BigNumber[];
+      2: BigNumber[];
+    }>;
+
+    getChannelMigrationArgs(
+      _channelId: Arrayish
+    ): Promise<{
+      0: BigNumber;
+      1: BigNumber;
+      2: string;
+      3: BigNumber;
+    }>;
+
+    getPeersMigrationInfo(
+      _channelId: Arrayish
+    ): Promise<{
+      0: string[];
+      1: BigNumber[];
+      2: BigNumber[];
+      3: BigNumber[];
+      4: BigNumber[];
+      5: BigNumber[];
+    }>;
+
+    getDisputeTimeout(_channelId: Arrayish): Promise<BigNumber>;
+
+    getMigratedTo(_channelId: Arrayish): Promise<string>;
+
+    getStateSeqNumMap(
+      _channelId: Arrayish
+    ): Promise<{
+      0: string[];
+      1: BigNumber[];
+    }>;
+
+    getTransferOutMap(
+      _channelId: Arrayish
+    ): Promise<{
+      0: string[];
+      1: BigNumber[];
+    }>;
+
+    getNextPayIdListHashMap(
+      _channelId: Arrayish
+    ): Promise<{
+      0: string[];
+      1: string[];
+    }>;
+
+    getLastPayResolveDeadlineMap(
+      _channelId: Arrayish
+    ): Promise<{
+      0: string[];
+      1: BigNumber[];
+    }>;
+
+    getPendingPayOutMap(
+      _channelId: Arrayish
+    ): Promise<{
+      0: string[];
+      1: BigNumber[];
+    }>;
+
+    getWithdrawIntent(
+      _channelId: Arrayish
+    ): Promise<{
+      0: string;
+      1: BigNumber;
+      2: BigNumber;
+      3: string;
+    }>;
+
+    getChannelStatusNum(_channelStatus: BigNumberish): Promise<BigNumber>;
+
     getEthPool(): Promise<string>;
+
     getPayRegistry(): Promise<string>;
+
     getCelerWallet(): Promise<string>;
+
+    getBalanceLimit(_tokenAddr: string): Promise<BigNumber>;
+
     getBalanceLimitsEnabled(): Promise<boolean>;
   };
+
+  renounceOwnership(
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  owner(): Promise<string>;
+
+  isOwner(): Promise<boolean>;
+
+  transferOwnership(
+    newOwner: string,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  setBalanceLimits(
+    _tokenAddrs: string[],
+    _limits: BigNumberish[],
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  disableBalanceLimits(
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  enableBalanceLimits(
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  openChannel(
+    _openRequest: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  deposit(
+    _channelId: Arrayish,
+    _receiver: string,
+    _transferFromAmount: BigNumberish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  depositInBatch(
+    _channelIds: Arrayish[],
+    _receivers: string[],
+    _transferFromAmounts: BigNumberish[],
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  snapshotStates(
+    _signedSimplexStateArray: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  intendWithdraw(
+    _channelId: Arrayish,
+    _amount: BigNumberish,
+    _recipientChannelId: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  confirmWithdraw(
+    _channelId: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  vetoWithdraw(
+    _channelId: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  cooperativeWithdraw(
+    _cooperativeWithdrawRequest: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  intendSettle(
+    _signedSimplexStateArray: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  clearPays(
+    _channelId: Arrayish,
+    _peerFrom: string,
+    _payIdList: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  confirmSettle(
+    _channelId: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  cooperativeSettle(
+    _settleRequest: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  migrateChannelTo(
+    _migrationRequest: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  migrateChannelFrom(
+    _fromLedgerAddr: string,
+    _migrationRequest: Arrayish,
+    overrides?: TransactionOverrides
+  ): Promise<ContractTransaction>;
+
+  getSettleFinalizedTime(_channelId: Arrayish): Promise<BigNumber>;
+
+  getTokenContract(_channelId: Arrayish): Promise<string>;
+
+  getTokenType(_channelId: Arrayish): Promise<number>;
+
+  getChannelStatus(_channelId: Arrayish): Promise<number>;
+
+  getCooperativeWithdrawSeqNum(_channelId: Arrayish): Promise<BigNumber>;
+
+  getTotalBalance(_channelId: Arrayish): Promise<BigNumber>;
+
+  getBalanceMap(
+    _channelId: Arrayish
+  ): Promise<{
+    0: string[];
+    1: BigNumber[];
+    2: BigNumber[];
+  }>;
+
+  getChannelMigrationArgs(
+    _channelId: Arrayish
+  ): Promise<{
+    0: BigNumber;
+    1: BigNumber;
+    2: string;
+    3: BigNumber;
+  }>;
+
+  getPeersMigrationInfo(
+    _channelId: Arrayish
+  ): Promise<{
+    0: string[];
+    1: BigNumber[];
+    2: BigNumber[];
+    3: BigNumber[];
+    4: BigNumber[];
+    5: BigNumber[];
+  }>;
+
+  getDisputeTimeout(_channelId: Arrayish): Promise<BigNumber>;
+
+  getMigratedTo(_channelId: Arrayish): Promise<string>;
+
+  getStateSeqNumMap(
+    _channelId: Arrayish
+  ): Promise<{
+    0: string[];
+    1: BigNumber[];
+  }>;
+
+  getTransferOutMap(
+    _channelId: Arrayish
+  ): Promise<{
+    0: string[];
+    1: BigNumber[];
+  }>;
+
+  getNextPayIdListHashMap(
+    _channelId: Arrayish
+  ): Promise<{
+    0: string[];
+    1: string[];
+  }>;
+
+  getLastPayResolveDeadlineMap(
+    _channelId: Arrayish
+  ): Promise<{
+    0: string[];
+    1: BigNumber[];
+  }>;
+
+  getPendingPayOutMap(
+    _channelId: Arrayish
+  ): Promise<{
+    0: string[];
+    1: BigNumber[];
+  }>;
+
+  getWithdrawIntent(
+    _channelId: Arrayish
+  ): Promise<{
+    0: string;
+    1: BigNumber;
+    2: BigNumber;
+    3: string;
+  }>;
+
+  getChannelStatusNum(_channelStatus: BigNumberish): Promise<BigNumber>;
+
+  getEthPool(): Promise<string>;
+
+  getPayRegistry(): Promise<string>;
+
+  getCelerWallet(): Promise<string>;
+
+  getBalanceLimit(_tokenAddr: string): Promise<BigNumber>;
+
+  getBalanceLimitsEnabled(): Promise<boolean>;
 
   filters: {
     OwnershipTransferred(
@@ -525,11 +826,15 @@ export class CelerLedger extends Contract {
   estimate: {
     renounceOwnership(): Promise<BigNumber>;
 
+    owner(): Promise<BigNumber>;
+
+    isOwner(): Promise<BigNumber>;
+
     transferOwnership(newOwner: string): Promise<BigNumber>;
 
     setBalanceLimits(
-      _tokenAddrs: (string)[],
-      _limits: (BigNumberish)[]
+      _tokenAddrs: string[],
+      _limits: BigNumberish[]
     ): Promise<BigNumber>;
 
     disableBalanceLimits(): Promise<BigNumber>;
@@ -545,9 +850,9 @@ export class CelerLedger extends Contract {
     ): Promise<BigNumber>;
 
     depositInBatch(
-      _channelIds: (Arrayish)[],
-      _receivers: (string)[],
-      _transferFromAmounts: (BigNumberish)[]
+      _channelIds: Arrayish[],
+      _receivers: string[],
+      _transferFromAmounts: BigNumberish[]
     ): Promise<BigNumber>;
 
     snapshotStates(_signedSimplexStateArray: Arrayish): Promise<BigNumber>;
@@ -584,5 +889,51 @@ export class CelerLedger extends Contract {
       _fromLedgerAddr: string,
       _migrationRequest: Arrayish
     ): Promise<BigNumber>;
+
+    getSettleFinalizedTime(_channelId: Arrayish): Promise<BigNumber>;
+
+    getTokenContract(_channelId: Arrayish): Promise<BigNumber>;
+
+    getTokenType(_channelId: Arrayish): Promise<BigNumber>;
+
+    getChannelStatus(_channelId: Arrayish): Promise<BigNumber>;
+
+    getCooperativeWithdrawSeqNum(_channelId: Arrayish): Promise<BigNumber>;
+
+    getTotalBalance(_channelId: Arrayish): Promise<BigNumber>;
+
+    getBalanceMap(_channelId: Arrayish): Promise<BigNumber>;
+
+    getChannelMigrationArgs(_channelId: Arrayish): Promise<BigNumber>;
+
+    getPeersMigrationInfo(_channelId: Arrayish): Promise<BigNumber>;
+
+    getDisputeTimeout(_channelId: Arrayish): Promise<BigNumber>;
+
+    getMigratedTo(_channelId: Arrayish): Promise<BigNumber>;
+
+    getStateSeqNumMap(_channelId: Arrayish): Promise<BigNumber>;
+
+    getTransferOutMap(_channelId: Arrayish): Promise<BigNumber>;
+
+    getNextPayIdListHashMap(_channelId: Arrayish): Promise<BigNumber>;
+
+    getLastPayResolveDeadlineMap(_channelId: Arrayish): Promise<BigNumber>;
+
+    getPendingPayOutMap(_channelId: Arrayish): Promise<BigNumber>;
+
+    getWithdrawIntent(_channelId: Arrayish): Promise<BigNumber>;
+
+    getChannelStatusNum(_channelStatus: BigNumberish): Promise<BigNumber>;
+
+    getEthPool(): Promise<BigNumber>;
+
+    getPayRegistry(): Promise<BigNumber>;
+
+    getCelerWallet(): Promise<BigNumber>;
+
+    getBalanceLimit(_tokenAddr: string): Promise<BigNumber>;
+
+    getBalanceLimitsEnabled(): Promise<BigNumber>;
   };
 }

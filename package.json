@@ -40,6 +40,7 @@
     "parcel-bundler": "^1.12.4",
     "ts-jest": "^25.5.0",
     "typechain": "^2.0.0",
+    "typechain-target-ethers": "^1.0.4",
     "typedoc": "^0.17.6",
     "typedoc-thunder-theme": "^0.0.2",
     "typescript": "^3.8.3"
