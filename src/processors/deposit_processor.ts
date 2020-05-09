@@ -1,28 +1,3 @@
-/**
- * @license
- * The MIT License
- *
- * Copyright (c) 2019 Celer Network
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
 import { ethers, Signer } from 'ethers';
 import { BigNumber, LogDescription } from 'ethers/utils';
 
@@ -49,7 +24,7 @@ export class DepositProcessor {
     tokenType: TokenTypeMap[keyof TokenTypeMap],
     amount: string
   ): Promise<string> {
-    const db = this.db;
+    const { db } = this;
     const channel = await db.paymentChannels.get(channelId);
     if (!channel) {
       throw errorUtils.unknownChannel(channelId);
@@ -66,7 +41,7 @@ export class DepositProcessor {
     tokenType: TokenTypeMap[keyof TokenTypeMap],
     amount: BigNumber
   ): Promise<string> {
-    const signer = this.signer;
+    const { signer } = this;
     const celerLedger = CelerLedgerFactory.connect(
       this.contractsInfo.celerLedgerAddress,
       signer
@@ -91,6 +66,7 @@ export class DepositProcessor {
     const ledgerInterface = celerLedger.interface;
     for (const event of receipt.events) {
       if (event.topics[0] === ledgerInterface.events.Deposit.topic) {
+        /* eslint-disable-next-line no-await-in-loop */
         await this.processDepositEvent(ledgerInterface.parseLog(event));
         break;
       }
@@ -99,20 +75,24 @@ export class DepositProcessor {
   }
 
   private async processDepositEvent(log: LogDescription): Promise<void> {
-    const values = log.values;
+    const { values } = log;
     const channelId = ethers.utils.hexlify(values.channelId);
     const addresses: string[] = values.peerAddrs;
-    const deposits: Uint8Array[] = values.deposits;
-    const db = this.db;
+    const { deposits } = values;
+    const { db } = this;
     return db.transaction('rw', db.paymentChannels, async () => {
       const channel = await db.paymentChannels.get(channelId);
-      const depositWithdrawal = channel.depositWithdrawal;
+      const { depositWithdrawal } = channel;
       if (addresses[0] === channel.selfAddress) {
-        depositWithdrawal.selfDeposit = deposits[0];
-        depositWithdrawal.peerDeposit = deposits[1];
+        [
+          depositWithdrawal.selfDeposit,
+          depositWithdrawal.peerDeposit,
+        ] = deposits;
       } else {
-        depositWithdrawal.selfDeposit = deposits[1];
-        depositWithdrawal.peerDeposit = deposits[0];
+        [
+          depositWithdrawal.peerDeposit,
+          depositWithdrawal.selfDeposit,
+        ] = deposits;
       }
       await db.paymentChannels.put(channel);
     });

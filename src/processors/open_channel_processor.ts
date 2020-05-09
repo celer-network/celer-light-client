@@ -1,28 +1,3 @@
-/**
- * @license
- * The MIT License
- *
- * Copyright (c) 2019 Celer Network
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
 import { ethers } from 'ethers';
 import { BigNumber, LogDescription } from 'ethers/utils';
 
@@ -45,13 +20,13 @@ import {
   TokenInfo,
   TokenTransfer,
   TokenType,
-  TokenTypeMap
+  TokenTypeMap,
 } from '../protobufs/entity_pb';
 import {
   OpenChannelBy,
   OpenChannelRequest,
   OpenChannelResponse,
-  SignedSimplexState
+  SignedSimplexState,
 } from '../protobufs/message_pb';
 import * as typeUtils from '../utils/types';
 
@@ -91,7 +66,7 @@ export class OpenChannelProcessor {
       .where({
         selfAddress,
         peerAddress,
-        tokenAddress
+        tokenAddress,
       })
       .toArray();
     if (existingChannels.length > 0) {
@@ -190,6 +165,7 @@ export class OpenChannelProcessor {
     let channelId: string;
     for (const event of receipt.events) {
       if (event.topics[0] === ledgerInterface.events.OpenChannel.topic) {
+        /* eslint-disable-next-line no-await-in-loop */
         channelId = await this.processOpenChannelEvent(
           ledgerInterface.parseLog(event)
         );
@@ -200,25 +176,23 @@ export class OpenChannelProcessor {
   }
 
   private async processOpenChannelEvent(log: LogDescription): Promise<string> {
-    const values = log.values;
+    const { values } = log;
     const addresses: string[] = values.peerAddrs;
-    const initialDeposits: BigNumber[] = values.initialDeposits;
+    const { initialDeposits } = values;
     let selfDeposit: BigNumber;
     let peerDeposit: BigNumber;
     let peerAddress: string;
     const selfAddress = await this.cryptoManager.signer.getAddress();
     if (addresses[0] === selfAddress) {
-      peerAddress = addresses[1];
-      selfDeposit = initialDeposits[0];
-      peerDeposit = initialDeposits[1];
+      [, peerAddress] = addresses;
+      [selfDeposit, peerDeposit] = initialDeposits;
     } else {
-      peerAddress = addresses[0];
-      selfDeposit = initialDeposits[1];
-      peerDeposit = initialDeposits[0];
+      [peerAddress] = addresses;
+      [peerDeposit, selfDeposit] = initialDeposits;
     }
-    const channelId: string = values.channelId;
+    const { channelId } = values;
     const tokenType: TokenTypeMap[keyof TokenTypeMap] = values.tokenType.toNumber();
-    const tokenAddress: string = values.tokenAddress;
+    const { tokenAddress } = values;
     const channel = new PaymentChannel(
       channelId,
       selfAddress,

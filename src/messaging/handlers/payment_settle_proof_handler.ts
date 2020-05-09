@@ -1,28 +1,3 @@
-/**
- * @license
- * The MIT License
- *
- * Copyright (c) 2019 Celer Network
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
 import { ethers } from 'ethers';
 
 import { Database } from '../../data/database';
@@ -30,7 +5,7 @@ import { ResolvePaymentProcessor } from '../../processors/resolve_payment_proces
 import { CelerMsg, PaymentSettleReason } from '../../protobufs/message_pb';
 import {
   PaymentSettleRequestInfo,
-  PaymentSettleRequestSender
+  PaymentSettleRequestSender,
 } from '../senders/payment_settle_request_sender';
 
 export class PaymentSettleProofHandler {
@@ -58,16 +33,21 @@ export class PaymentSettleProofHandler {
     if (settledPaysList.length === 0) {
       return;
     }
-    const db = this.db;
+    const { db } = this;
     const paymentSettleRequestInfos: PaymentSettleRequestInfo[] = [];
     let channelId: string;
-    for (const settledPayment of settledPaysList) {
+    const paymentIds = settledPaysList.map((settledPayment) =>
+      ethers.utils.hexlify(settledPayment.getSettledPayId_asU8())
+    );
+    const payments = await db.payments.bulkGet(paymentIds);
+    for (let i = 0; i < settledPaysList.length; i++) {
+      const settledPayment = settledPaysList[i];
       const paymentId = ethers.utils.hexlify(
         settledPayment.getSettledPayId_asU8()
       );
       const settlementAmount = settledPayment.getAmount_asU8();
       const reason = settledPayment.getReason();
-      const payment = await db.payments.get(paymentId);
+      const payment = payments[i];
       if (!payment) {
         return;
       }
@@ -81,11 +61,12 @@ export class PaymentSettleProofHandler {
       const paymentSettlementInfo = {
         payment,
         settlementAmount,
-        reason
+        reason,
       };
       switch (settledPayment.getReason()) {
         case PaymentSettleReason.PAY_RESOLVED_ONCHAIN:
           if (
+            /* eslint-disable-next-line no-await-in-loop */
             !(await this.resolvePaymentProcessor.getOnChainPaymentInfo(
               paymentId
             ))

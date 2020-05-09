@@ -1,28 +1,3 @@
-/**
- * @license
- * The MIT License
- *
- * Copyright (c) 2019 Celer Network
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 
 import { grpc } from '@improbable-eng/grpc-web';
@@ -32,11 +7,11 @@ import {
   AuthReq,
   CelerMsg,
   OpenChannelRequest,
-  OpenChannelResponse
+  OpenChannelResponse,
 } from '../protobufs/message_pb';
 import {
   ResponseStream,
-  WebProxyRpcClient
+  WebProxyRpcClient,
 } from '../protobufs/web_proxy_pb_service';
 
 interface MessageHandler {
@@ -75,7 +50,7 @@ export class MessageManager {
 
   async openChannel(request: OpenChannelRequest): Promise<OpenChannelResponse> {
     // TODO(dominator008): Maybe merge OpenChannel into CelerMsg
-    return await new Promise<OpenChannelResponse>((resolve, reject) => {
+    return new Promise<OpenChannelResponse>((resolve, reject) => {
       this.rpcClient.openChannel(request, this.metadata, (error, response) => {
         if (error) {
           reject(error);
@@ -120,10 +95,11 @@ export class MessageManager {
     }
   }
 
-  private async dispatchMessages() {
-    const messageQueue = this.messageQueue;
+  private async dispatchMessages(): Promise<void> {
+    const { messageQueue } = this;
     while (messageQueue.length > 0) {
       const message = messageQueue.shift();
+      /* eslint-disable-next-line no-await-in-loop */
       await this.handlers.get(message.getMessageCase()).handle(message);
     }
     this.dispatcherSpawned = false;

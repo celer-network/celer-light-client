@@ -12,13 +12,13 @@ const connection = 'http://127.0.0.1:8545';
 
 it('should open channel', async () => {
   const provider = new ethers.providers.JsonRpcProvider(connection);
-  expect(await provider.getSigner(2).unlock(''));
+  expect(await provider.getSigner(2).unlock('')).toBeTruthy();
   const client = await Celer.create(connection, 2, contractsInfo, config);
   const channelId = await client.openPaymentChannel(
-    TokenType.ETH,
-    ethers.constants.AddressZero,
-    '1000000000000',
-    '1000000000000'
+      TokenType.ETH,
+      ethers.constants.AddressZero,
+      '1000000000000',
+      '1000000000000',
   );
   expect(channelId).toBeDefined();
   client.close();

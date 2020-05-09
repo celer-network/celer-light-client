@@ -9,7 +9,7 @@ import { Database } from '../../data/database';
 import { Payment, PaymentStatus } from '../../data/payment';
 import {
   PaymentChannel,
-  PaymentChannelStatus
+  PaymentChannelStatus,
 } from '../../data/payment_channel';
 import {
   AccountAmtPair,
@@ -20,12 +20,12 @@ import {
   TokenTypeMap,
   TransferFunction,
   TransferFunctionType,
-  TransferFunctionTypeMap
+  TransferFunctionTypeMap,
 } from '../../protobufs/entity_pb';
 import {
   CelerMsg,
   CondPayRequest,
-  SignedSimplexState
+  SignedSimplexState,
 } from '../../protobufs/message_pb';
 import * as errorUtils from '../../utils/errors';
 import * as typeUtils from '../../utils/types';
@@ -100,14 +100,14 @@ export class CondPayRequestSender {
     conditionalPay.setPayTimestamp(CondPayRequestSender.getPayTimestamp());
     const paymentId = Payment.calculatePaymentId(conditionalPay);
     const paymentBytes = conditionalPay.serializeBinary();
-    const db = this.db;
+    const { db } = this;
     const selfAddress = await this.cryptoManager.signer.getAddress();
-    const peerAddress = this.peerAddress;
+    const { peerAddress } = this;
     const channels = await db.paymentChannels
       .where({
         selfAddress,
         peerAddress,
-        tokenAddress
+        tokenAddress,
       })
       .toArray();
     if (channels.length === 0) {
@@ -123,7 +123,7 @@ export class CondPayRequestSender {
     );
     const [
       signedSimplexState,
-      baseSeq
+      baseSeq,
     ] = await this.initializePaymentAndGetUpdatedSignedSimplexState(
       channel,
       payment,
@@ -187,7 +187,7 @@ export class CondPayRequestSender {
   private static getPayTimestamp(): string {
     let random = String(Math.floor(Math.random() * 1e6));
     while (random.length < 6) {
-      random = '0' + random;
+      random = `0${random}`;
     }
     return String(Date.now()) + random;
   }

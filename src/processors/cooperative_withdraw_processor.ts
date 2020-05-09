@@ -1,28 +1,3 @@
-/**
- * @license
- * The MIT License
- *
- * Copyright (c) 2019 Celer Network
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
 import { ethers } from 'ethers';
 import { LogDescription } from 'ethers/utils';
 
@@ -34,12 +9,12 @@ import { MessageManager } from '../messaging/message_manager';
 import { CooperativeWithdrawRequest as OnChainCooperativeWithdrawRequest } from '../protobufs/chain_pb';
 import {
   AccountAmtPair,
-  CooperativeWithdrawInfo
+  CooperativeWithdrawInfo,
 } from '../protobufs/entity_pb';
 import {
   CelerMsg,
   CooperativeWithdrawRequest,
-  CooperativeWithdrawResponse
+  CooperativeWithdrawResponse,
 } from '../protobufs/message_pb';
 import * as typeUtils from '../utils/types';
 
@@ -110,6 +85,7 @@ export class CooperativeWithdrawProcessor {
     await this.messageManager.sendMessage(message);
 
     while (!this.currentResponse) {
+      /* eslint-disable-next-line no-await-in-loop */
       await CooperativeWithdrawProcessor.sleep(WAIT_RESPONSE_INTERVAL);
     }
     const txHash = await this.sendCooperativeWithdrawTx(this.currentResponse);
@@ -126,7 +102,7 @@ export class CooperativeWithdrawProcessor {
   }
 
   private static sleep(milliseconds: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, milliseconds));
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 
   private async sendCooperativeWithdrawTx(
@@ -139,8 +115,7 @@ export class CooperativeWithdrawProcessor {
     const channelId = ethers.utils.hexlify(withdrawInfo.getChannelId_asU8());
 
     const selfAddress = await this.cryptoManager.signer.getAddress();
-    const peerAddress = (await this.db.paymentChannels.get(channelId))
-      .peerAddress;
+    const { peerAddress } = await this.db.paymentChannels.get(channelId);
 
     if (
       !CryptoManager.isSignatureValid(
@@ -179,6 +154,7 @@ export class CooperativeWithdrawProcessor {
       if (
         event.topics[0] === ledgerInterface.events.CooperativeWithdraw.topic
       ) {
+        /* eslint-disable-next-line no-await-in-loop */
         await this.processCooperativeWithdrawEvent(
           ledgerInterface.parseLog(event)
         );
@@ -191,30 +167,38 @@ export class CooperativeWithdrawProcessor {
   private async processCooperativeWithdrawEvent(
     log: LogDescription
   ): Promise<void> {
-    const values = log.values;
+    const { values } = log;
     const channelId = ethers.utils.hexlify(values.channelId);
-    const receiver: string = values.receiver;
-    const deposits: Uint8Array[] = values.deposits;
-    const withdrawals: Uint8Array[] = values.withdrawals;
+    const { receiver } = values;
+    const { deposits } = values;
+    const { withdrawals } = values;
     // TODO(dominator008): Handle recipientChannelId
-    const db = this.db;
+    const { db } = this;
     return db.transaction('rw', db.paymentChannels, async () => {
       const channel = await db.paymentChannels.get(channelId);
-      const selfAddress = channel.selfAddress;
+      const { selfAddress } = channel;
       if (selfAddress !== receiver) {
         return;
       }
-      const depositWithdrawal = channel.depositWithdrawal;
+      const { depositWithdrawal } = channel;
       if (selfAddress < channel.peerAddress) {
-        depositWithdrawal.selfDeposit = deposits[0];
-        depositWithdrawal.peerDeposit = deposits[1];
-        depositWithdrawal.selfWithdrawal = withdrawals[0];
-        depositWithdrawal.peerWithdrawal = withdrawals[1];
+        [
+          depositWithdrawal.selfDeposit,
+          depositWithdrawal.peerDeposit,
+        ] = deposits;
+        [
+          depositWithdrawal.selfWithdrawal,
+          depositWithdrawal.peerWithdrawal,
+        ] = withdrawals;
       } else {
-        depositWithdrawal.selfDeposit = deposits[1];
-        depositWithdrawal.peerDeposit = deposits[0];
-        depositWithdrawal.selfWithdrawal = withdrawals[1];
-        depositWithdrawal.peerWithdrawal = withdrawals[0];
+        [
+          depositWithdrawal.peerDeposit,
+          depositWithdrawal.selfDeposit,
+        ] = deposits;
+        [
+          depositWithdrawal.peerWithdrawal,
+          depositWithdrawal.selfWithdrawal,
+        ] = withdrawals;
       }
       await db.paymentChannels.put(channel);
     });

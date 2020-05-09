@@ -1,28 +1,3 @@
-/**
- * @license
- * The MIT License
- *
- * Copyright (c) 2019 Celer Network
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
 import { ethers } from 'ethers';
 
 import { CryptoManager } from '../../crypto/crypto_manager';
@@ -48,7 +23,7 @@ export class RevealSecretAckHandler {
     const ack = message.getRevealSecretAck();
     const paymentIdBytes = ack.getPayId_asU8();
     const paymentId = ethers.utils.hexlify(paymentIdBytes);
-    const db = this.db;
+    const { db } = this;
     const payment = await db.payments.get(paymentId);
     if (!payment) {
       return;
@@ -79,7 +54,7 @@ export class RevealSecretAckHandler {
     }
     // If the only condition is HASH_LOCK, settle the payment
     if (conditions.length === 1) {
-      return await this.paymentSettleRequestSender.sendPaymentSettleRequests(
+      await this.paymentSettleRequestSender.sendPaymentSettleRequests(
         payment.outgoingChannelId,
         [
           {
@@ -89,8 +64,8 @@ export class RevealSecretAckHandler {
               .getMaxTransfer()
               .getReceiver()
               .getAmt_asU8(),
-            reason: PaymentSettleReason.PAY_PAID_MAX
-          }
+            reason: PaymentSettleReason.PAY_PAID_MAX,
+          },
         ]
       );
     }

@@ -1,28 +1,3 @@
-/**
- * @license
- * The MIT License
- *
- * Copyright (c) 2019 Celer Network
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
 import { ethers } from 'ethers';
 
 import { Config } from '../../api/config';
@@ -31,9 +6,10 @@ import { CryptoManager } from '../../crypto/crypto_manager';
 import { Database } from '../../data/database';
 import { Payment, PaymentStatus } from '../../data/payment';
 import { PaymentChannel } from '../../data/payment_channel';
+import { PaymentChannelUtils } from '../../data/payment_channel_utils';
 import {
   ConditionalPay,
-  SimplexPaymentChannel
+  SimplexPaymentChannel,
 } from '../../protobufs/entity_pb';
 import {
   CelerMsg,
@@ -41,7 +17,7 @@ import {
   CondPayResponse,
   ErrCode,
   Error as ErrorResponse,
-  SignedSimplexState
+  SignedSimplexState,
 } from '../../protobufs/message_pb';
 import * as errorUtils from '../../utils/errors';
 import * as typeUtils from '../../utils/types';
@@ -87,7 +63,7 @@ export class CondPayRequestHandler {
 
     const {
       result: { valid, errCode, errReason },
-      lastCosignedSimplexState
+      lastCosignedSimplexState,
     } = await this.verifyCondPayRequest(
       await this.cryptoManager.signer.getAddress(),
       paymentId,
@@ -113,7 +89,7 @@ export class CondPayRequestHandler {
         selfSignatureForSimplexStateBytes
       );
 
-      const db = this.db;
+      const { db } = this;
       const channel = await db.paymentChannels.get(receivedChannelId);
       channel.setIncomingSignedSimplexState(receivedSignedSimplexState);
       await db.paymentChannels.put(channel);
@@ -177,13 +153,13 @@ export class CondPayRequestHandler {
     readonly result: errorUtils.VerificationResult;
     readonly lastCosignedSimplexState?: SignedSimplexState;
   }> {
-    const db = this.db;
+    const { db } = this;
     const {
       result: existenceResult,
       channel,
       storedSignedSimplexState,
-      storedSimplexState
-    } = await PaymentChannel.verifyIncomingChannelExistence(
+      storedSimplexState,
+    } = await PaymentChannelUtils.verifyIncomingChannelExistence(
       db,
       receivedChannelId
     );
@@ -204,31 +180,25 @@ export class CondPayRequestHandler {
     if (!commonResult.valid) {
       return {
         result: commonResult,
-        lastCosignedSimplexState: storedSignedSimplexState
+        lastCosignedSimplexState: storedSignedSimplexState,
       };
     }
 
     // Verify transfer amount
     if (
       ethers.utils.hexlify(
-        storedSimplexState
-          .getTransferToPeer()
-          .getReceiver()
-          .getAmt_asU8()
+        storedSimplexState.getTransferToPeer().getReceiver().getAmt_asU8()
       ) !==
       ethers.utils.hexlify(
-        receivedSimplexState
-          .getTransferToPeer()
-          .getReceiver()
-          .getAmt_asU8()
+        receivedSimplexState.getTransferToPeer().getReceiver().getAmt_asU8()
       )
     ) {
       return {
         result: {
           valid: false,
-          errReason: 'Invalid transfer amount'
+          errReason: 'Invalid transfer amount',
         },
-        lastCosignedSimplexState: storedSignedSimplexState
+        lastCosignedSimplexState: storedSignedSimplexState,
       };
     }
 
@@ -239,9 +209,9 @@ export class CondPayRequestHandler {
       return {
         result: {
           valid: false,
-          errCode: ErrCode.WRONG_PEER
+          errCode: ErrCode.WRONG_PEER,
         },
-        lastCosignedSimplexState: storedSignedSimplexState
+        lastCosignedSimplexState: storedSignedSimplexState,
       };
     }
 
@@ -259,9 +229,9 @@ export class CondPayRequestHandler {
       return {
         result: {
           valid: false,
-          errReason: 'Insufficient balance'
+          errReason: 'Insufficient balance',
         },
-        lastCosignedSimplexState: storedSignedSimplexState
+        lastCosignedSimplexState: storedSignedSimplexState,
       };
     }
 
@@ -273,9 +243,9 @@ export class CondPayRequestHandler {
       return {
         result: {
           valid: false,
-          errReason: 'Invalid PayResolver address'
+          errReason: 'Invalid PayResolver address',
         },
-        lastCosignedSimplexState: storedSignedSimplexState
+        lastCosignedSimplexState: storedSignedSimplexState,
       };
     }
 
@@ -289,9 +259,9 @@ export class CondPayRequestHandler {
       return {
         result: {
           valid: false,
-          errReason: 'Invalid last payment resolve deadline'
+          errReason: 'Invalid last payment resolve deadline',
         },
-        lastCosignedSimplexState: storedSignedSimplexState
+        lastCosignedSimplexState: storedSignedSimplexState,
       };
     }
 
@@ -306,9 +276,9 @@ export class CondPayRequestHandler {
       return {
         result: {
           valid: false,
-          errReason: 'Invalid total pending amount'
+          errReason: 'Invalid total pending amount',
         },
-        lastCosignedSimplexState: storedSignedSimplexState
+        lastCosignedSimplexState: storedSignedSimplexState,
       };
     }
 
@@ -320,16 +290,16 @@ export class CondPayRequestHandler {
       return {
         result: {
           valid: false,
-          errReason: 'Too many pending payments'
+          errReason: 'Too many pending payments',
         },
-        lastCosignedSimplexState: storedSignedSimplexState
+        lastCosignedSimplexState: storedSignedSimplexState,
       };
     }
 
     // Verify pending payment list
     const [
       removedPendingPaymentIds,
-      addedPendingPaymentIds
+      addedPendingPaymentIds,
     ] = Payment.getPaymentIdListDifferences(
       storedPendingPayIds,
       receivedPendingPayIds
@@ -342,18 +312,18 @@ export class CondPayRequestHandler {
       return {
         result: {
           valid: false,
-          errReason: errorUtils.INVALID_PENDING_PAYMENTS
+          errReason: errorUtils.INVALID_PENDING_PAYMENTS,
         },
-        lastCosignedSimplexState: storedSignedSimplexState
+        lastCosignedSimplexState: storedSignedSimplexState,
       };
     }
     if (paymentId !== ethers.utils.hexlify(addedPendingPaymentIds[0])) {
       return {
         result: {
           valid: false,
-          errReason: errorUtils.INVALID_PENDING_PAYMENTS
+          errReason: errorUtils.INVALID_PENDING_PAYMENTS,
         },
-        lastCosignedSimplexState: storedSignedSimplexState
+        lastCosignedSimplexState: storedSignedSimplexState,
       };
     }
 

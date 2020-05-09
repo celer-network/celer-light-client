@@ -1,28 +1,3 @@
-/**
- * @license
- * The MIT License
- *
- * Copyright (c) 2019 Celer Network
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
 import { ethers } from 'ethers';
 
 import { CryptoManager } from '../crypto/crypto_manager';
@@ -30,13 +5,12 @@ import { SimplexPaymentChannel, TokenTypeMap } from '../protobufs/entity_pb';
 import { ErrCode, SignedSimplexState } from '../protobufs/message_pb';
 import * as errorUtils from '../utils/errors';
 import { Balance } from './balance';
-import { Database } from './database';
 import { DepositWithdrawal } from './deposit_withdrawal';
 
 export enum PaymentChannelStatus {
   OPEN = 0,
   SETTLING = 1,
-  SETTLED = 2
+  SETTLED = 2,
 }
 
 export class PaymentChannel {
@@ -96,7 +70,7 @@ export class PaymentChannel {
       this.getOutgoingSignedSimplexState().getSimplexState_asU8()
     );
 
-    const depositWithdrawal = this.depositWithdrawal;
+    const { depositWithdrawal } = this;
     const selfDeposit = ethers.utils.bigNumberify(
       depositWithdrawal.selfDeposit
     );
@@ -120,16 +94,10 @@ export class PaymentChannel {
         )
       : ethers.utils.bigNumberify(0);
     const transferFromPeer = ethers.utils.bigNumberify(
-      incomingSimplexState
-        .getTransferToPeer()
-        .getReceiver()
-        .getAmt_asU8()
+      incomingSimplexState.getTransferToPeer().getReceiver().getAmt_asU8()
     );
     const transferToPeer = ethers.utils.bigNumberify(
-      outgoingSimplexState
-        .getTransferToPeer()
-        .getReceiver()
-        .getAmt_asU8()
+      outgoingSimplexState.getTransferToPeer().getReceiver().getAmt_asU8()
     );
     const pendingTransferToPeer = ethers.utils.bigNumberify(
       outgoingSimplexState.getTotalPendingAmount_asU8()
@@ -175,36 +143,6 @@ export class PaymentChannel {
     signedSimplexState.setSimplexState(simplexState.serializeBinary());
   }
 
-  static async verifyIncomingChannelExistence(
-    db: Database,
-    receivedChannelId: string
-  ): Promise<{
-    readonly result: errorUtils.VerificationResult;
-    readonly channel?: PaymentChannel;
-    readonly storedSignedSimplexState?: SignedSimplexState;
-    readonly storedSimplexState?: SimplexPaymentChannel;
-  }> {
-    const channel = await db.paymentChannels.get(receivedChannelId);
-    if (!channel) {
-      return {
-        result: {
-          valid: false,
-          errReason: errorUtils.unknownChannel(receivedChannelId).message
-        }
-      };
-    }
-    const storedSignedSimplexState = channel.getIncomingSignedSimplexState();
-    const storedSimplexState = SimplexPaymentChannel.deserializeBinary(
-      storedSignedSimplexState.getSimplexState_asU8()
-    );
-    return {
-      result: { valid: true },
-      channel,
-      storedSignedSimplexState,
-      storedSimplexState
-    };
-  }
-
   static deserializeSignedSimplexState(
     signedSimplexState: SignedSimplexState
   ): [SimplexPaymentChannel, Uint8Array] {
@@ -229,7 +167,7 @@ export class PaymentChannel {
     if (channel.status !== PaymentChannelStatus.OPEN) {
       return {
         valid: false,
-        errReason: errorUtils.paymentChannelNotOpen(receivedChannelId).message
+        errReason: errorUtils.paymentChannelNotOpen(receivedChannelId).message,
       };
     }
 
@@ -246,7 +184,7 @@ export class PaymentChannel {
     ) {
       return {
         valid: false,
-        errCode: ErrCode.INVALID_SIG
+        errCode: ErrCode.INVALID_SIG,
       };
     }
 
@@ -257,7 +195,7 @@ export class PaymentChannel {
     ) {
       return {
         valid: false,
-        errReason: 'Invalid peerFrom'
+        errReason: 'Invalid peerFrom',
       };
     }
 
@@ -271,7 +209,7 @@ export class PaymentChannel {
     ) {
       return {
         valid: false,
-        errCode: ErrCode.INVALID_SEQ_NUM
+        errCode: ErrCode.INVALID_SEQ_NUM,
       };
     }
 

@@ -1,28 +1,3 @@
-/**
- * @license
- * The MIT License
- *
- * Copyright (c) 2019 Celer Network
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
 import { ethers } from 'ethers';
 
 import { CryptoManager } from '../../crypto/crypto_manager';
@@ -30,7 +5,7 @@ import { Database } from '../../data/database';
 import { Payment, PaymentStatus } from '../../data/payment';
 import {
   PaymentChannel,
-  PaymentChannelStatus
+  PaymentChannelStatus,
 } from '../../data/payment_channel';
 import { SimplexPaymentChannel } from '../../protobufs/entity_pb';
 import {
@@ -38,7 +13,7 @@ import {
   PaymentSettleReasonMap,
   PaymentSettleRequest,
   SettledPayment,
-  SignedSimplexState
+  SignedSimplexState,
 } from '../../protobufs/message_pb';
 import * as errorUtils from '../../utils/errors';
 import { MessageManager } from '../message_manager';
@@ -71,15 +46,15 @@ export class PaymentSettleRequestSender {
     channelId: string,
     settleRequestInfos: PaymentSettleRequestInfo[]
   ): Promise<void> {
-    const db = this.db;
-    const payments = settleRequestInfos.map(info => info.payment);
+    const { db } = this;
+    const payments = settleRequestInfos.map((info) => info.payment);
     const settlementAmounts = settleRequestInfos.map(
-      info => info.settlementAmount
+      (info) => info.settlementAmount
     );
-    const reasons = settleRequestInfos.map(info => info.reason);
+    const reasons = settleRequestInfos.map((info) => info.reason);
     const [
       signedSimpleState,
-      baseSeqNum
+      baseSeqNum,
     ] = await this.getUpdatedSignedSimplexState(
       channelId,
       payments,
@@ -104,14 +79,12 @@ export class PaymentSettleRequestSender {
     message.setPaymentSettleRequest(request);
     await this.messageManager.sendMessage(message);
 
-    await db.transaction('rw', db.payments, async () => {
-      for (let i = 0; i < paymentCount; i++) {
-        const payment = payments[i];
-        payment.status = PaymentStatus.PEER_FROM_SIGNED_SETTLED;
-        payment.settlementAmount = settlementAmounts[i];
-        await db.payments.put(payment);
-      }
-    });
+    for (let i = 0; i < paymentCount; i++) {
+      const payment = payments[i];
+      payment.status = PaymentStatus.PEER_FROM_SIGNED_SETTLED;
+      payment.settlementAmount = settlementAmounts[i];
+    }
+    await db.payments.bulkPut(payments);
   }
 
   private async getUpdatedSignedSimplexState(
@@ -119,7 +92,7 @@ export class PaymentSettleRequestSender {
     payments: Payment[],
     settlementAmounts: Uint8Array[]
   ): Promise<[SignedSimplexState, number]> {
-    const db = this.db;
+    const { db } = this;
     const channel = await db.paymentChannels.get(channelId);
     if (channel.status !== PaymentChannelStatus.OPEN) {
       throw errorUtils.paymentChannelNotOpen(channel.channelId);
@@ -137,7 +110,7 @@ export class PaymentSettleRequestSender {
     for (let i = 0; i < payments.length; i++) {
       const payment = payments[i];
       const settlementAmount = settlementAmounts[i];
-      const paymentId = payment.paymentId;
+      const { paymentId } = payment;
       const conditionalPay = payment.getConditionalPay();
       const maxPaymentAmount = ethers.utils.bigNumberify(
         conditionalPay

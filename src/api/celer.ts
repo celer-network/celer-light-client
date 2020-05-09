@@ -1,35 +1,10 @@
 /**
- * @license
- * The MIT License
- *
- * Copyright (c) 2019 Celer Network
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
-/**
  * @fileoverview Celer Light Client APIs
  */
 
 import isNode from 'detect-node';
 import { ethers, Signer, Wallet } from 'ethers';
-import { AsyncSendable, JsonRpcProvider, Web3Provider } from 'ethers/providers';
+import { AsyncSendable, JsonRpcProvider } from 'ethers/providers';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 
 import { grpc } from '@improbable-eng/grpc-web';
@@ -38,6 +13,7 @@ import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { CryptoManager } from '../crypto/crypto_manager';
 import { Database } from '../data/database';
 import { HashLock } from '../data/hash_lock';
+import { HashLockUtils } from '../data/hash_lock_utils';
 import { CondPayReceiptHandler } from '../messaging/handlers/cond_pay_receipt_handler';
 import { CondPayRequestHandler } from '../messaging/handlers/cond_pay_request_handler';
 import { CondPayResponseHandler } from '../messaging/handlers/cond_pay_response_handler';
@@ -62,12 +38,12 @@ import {
   Condition,
   TokenTypeMap,
   TransferFunctionType,
-  TransferFunctionTypeMap
+  TransferFunctionTypeMap,
 } from '../protobufs/entity_pb';
 import {
   AuthReq,
   CelerMsg,
-  PaymentSettleReason
+  PaymentSettleReason,
 } from '../protobufs/message_pb';
 import * as typeUtils from '../utils/types';
 import { Config } from './config';
@@ -99,7 +75,7 @@ export class Celer {
     config: Config
   ) {
     this.db = new Database();
-    const db = this.db;
+    const { db } = this;
     this.config = config;
     if (isNode) {
       grpc.setDefaultTransport(NodeHttpTransport());
@@ -376,7 +352,7 @@ export class Celer {
       ethers.utils.getAddress(destination),
       ethers.utils.bigNumberify(amount),
       TransferFunctionType.BOOLEAN_AND,
-      [await HashLock.generateHashLockCondition(this.db)],
+      [await HashLockUtils.generateHashLockCondition(this.db)],
       this.config.defaultPaymentTimeout,
       note
     );
@@ -506,7 +482,7 @@ export class Celer {
    * @returns A hash lock condition
    */
   generateHashLockCondition(): Promise<Condition> {
-    return HashLock.generateHashLockCondition(this.db);
+    return HashLockUtils.generateHashLockCondition(this.db);
   }
 
   /**
@@ -515,7 +491,7 @@ export class Celer {
    * @param condition A hash lock condition
    */
   removeHashlockCondition(condition: Condition): Promise<void> {
-    return HashLock.removeHashLockCondition(this.db, condition);
+    return HashLockUtils.removeHashLockCondition(this.db, condition);
   }
 
   /**

@@ -1,28 +1,3 @@
-/**
- * @license
- * The MIT License
- *
- * Copyright (c) 2019 Celer Network
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- */
-
 import { ethers } from 'ethers';
 
 import { CryptoManager } from '../../crypto/crypto_manager';
@@ -45,16 +20,16 @@ export class CondPayResponseHandler {
 
   async handle(message: CelerMsg): Promise<void> {
     const response = message.getCondPayResponse();
-    const db = this.db;
+    const { db } = this;
     const selfAddress = await this.cryptoManager.signer.getAddress();
-    const peerAddress = this.peerAddress;
+    const { peerAddress } = this;
     const receivedSignedSimplexState = response.getStateCosigned();
     if (!receivedSignedSimplexState) {
       return;
     }
     const [
       receivedSimplexState,
-      receivedSimplexStateBytes
+      receivedSimplexStateBytes,
     ] = PaymentChannel.deserializeSignedSimplexState(
       receivedSignedSimplexState
     );
@@ -105,7 +80,7 @@ export class CondPayResponseHandler {
         // TODO(dominator008): Revisit this
         const payments = await db.payments
           .where({
-            status: PaymentStatus.PEER_FROM_SIGNED_PENDING
+            status: PaymentStatus.PEER_FROM_SIGNED_PENDING,
           })
           .toArray();
         if (payments.length === 0) {
@@ -113,15 +88,15 @@ export class CondPayResponseHandler {
         }
         for (const payment of payments) {
           payment.status = PaymentStatus.FAILED;
-          await db.payments.put(payment);
         }
+        await db.payments.bulkPut(payments);
       });
     } else {
       await db.transaction('rw', db.paymentChannels, db.payments, async () => {
         // TODO(dominator008): Maybe support multiple in-flight payments
         const payments = await db.payments
           .where({
-            status: PaymentStatus.PEER_FROM_SIGNED_PENDING
+            status: PaymentStatus.PEER_FROM_SIGNED_PENDING,
           })
           .toArray();
         if (payments.length === 0) {
