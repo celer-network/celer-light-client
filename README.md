@@ -1,5 +1,7 @@
 # Celer Light Client
 
+[![Build Status](https://travis-ci.com/celer-network/celer-light-client.svg?token=DvaxasPgAzCzksHzA2ct&branch=master)](https://travis-ci.com/celer-network/celer-light-client)
+
 This is a TypeScript implementation of a Celer client capable of sending and
 receiving conditional payments via state channels. Compared to a full Celer
 node, the light client does NOT have the capability of relaying payments.
