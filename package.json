@@ -21,7 +21,8 @@
     "watch": "npx parcel watch demo/index.html",
     "generate:contract-bindings": "typechain --target ethers --outDir src/abi 'src/abi/*.json'",
     "generate:proto-bindings": "scripts/generate_proto_bindings.sh",
-    "test": "scripts/run_integration_tests.sh"
+    "test": "scripts/run_integration_tests.sh",
+    "test:ci": "scripts/run_integration_tests.sh 90"
   },
   "browserslist": [
     "last 2 Chrome versions",

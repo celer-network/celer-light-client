@@ -8,11 +8,11 @@ import { Celer, TokenType } from '../src/index';
 
 Dexie.dependencies.indexedDB = indexedDB;
 
-const connection = 'http://localhost:8545';
+const connection = 'http://127.0.0.1:8545';
 
 it('should open channel', async () => {
   const provider = new ethers.providers.JsonRpcProvider(connection);
-  provider.getSigner(2).unlock('');
+  expect(await provider.getSigner(2).unlock(''));
   const client = await Celer.create(connection, 2, contractsInfo, config);
   const channelId = await client.openPaymentChannel(
     TokenType.ETH,

@@ -1,0 +1,25 @@
+language: node_js
+node_js:
+  - 'node'
+before_install:
+  - wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz -O /tmp/go.tar.gz
+  - mkdir golang
+  - mkdir gopath
+  - tar -C $PWD/golang -xzf /tmp/go.tar.gz
+  - export PATH=$PWD/golang/go/bin:$PATH
+  - export GOROOT=$PWD/golang/go
+  - export GOPATH=$PWD/gopath
+  - go version
+  - wget https://gethstore.blob.core.windows.net/builds/geth-linux-amd64-1.9.13-cbc4ac26.tar.gz -O /tmp/geth.tar.gz
+  - mkdir geth
+  - tar -C $PWD/geth -xzf /tmp/geth.tar.gz
+  - export PATH=$PWD/geth/geth-linux-amd64-1.9.13-cbc4ac26:$PATH
+  - geth version
+  - git clone https://github.com/celer-network/goCeler-oss.git
+  - export GOCELER=$PWD/goCeler-oss
+install:
+  - yarn install
+script:
+  - yarn test:ci
+notifications:
+  email: false
