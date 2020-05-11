@@ -1,3 +1,4 @@
+/* eslint-env browser */
 import { ethers } from 'ethers';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 
@@ -62,7 +63,7 @@ async function withdraw(): Promise<void> {
 }
 
 async function sendPayment(): Promise<void> {
-  const client = window.client;
+  const { client } = window;
   const amount = (document.getElementById('amount') as HTMLInputElement).value;
   const note = new Any();
   const invoice = new Invoice();
@@ -89,7 +90,7 @@ async function sendPayment(): Promise<void> {
   }, 50);
 }
 
-async function connect() {
+async function connect(): Promise<void> {
   if (
     typeof window.ethereum === 'undefined' &&
     typeof window.web3 === 'undefined'
@@ -144,8 +145,8 @@ async function connect() {
   window.client = client;
 }
 
-(async () => {
-  const href = window.location.href;
+(async (): Promise<void> => {
+  const { href } = window.location;
   const url = new URL(href);
   const invoice = url.searchParams.get('invoice');
   const recipient = url.searchParams.get('recipient');
@@ -153,7 +154,7 @@ async function connect() {
   const redirectUrl = url.searchParams.get('redirect');
   window.redirectUrl = redirectUrl;
 
-  window.onload = () => {
+  window.onload = (): void => {
     (document.getElementById(
       'recipient'
     ) as HTMLInputElement).value = recipient;

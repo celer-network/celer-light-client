@@ -6,7 +6,7 @@ import { CelerMsg, PaymentSettleReason } from '../../protobufs/message_pb';
 import {
   PaymentSettleRequestInfo,
   PaymentSettleRequestSender,
-} from '../senders/payment_settle_request_sender';
+} from '../outgoing/payment_settle_request_sender';
 
 export class PaymentSettleProofHandler {
   private readonly db: Database;

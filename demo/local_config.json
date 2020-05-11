@@ -5,6 +5,6 @@
   "defaultPaymentTimeout": 50,
   "maxPendingPayments": 200,
   "ethJsonRpcUrl": "http://localhost:8545",
-  "ospEthAddress": "0x6a6d2a97da1c453a4e099e8054865a0a59728863",
+  "ospEthAddress": "0x0015f5863ddc59ab6610d7b6d73b2eacd43e6b7e",
   "ospNetworkAddress": "http://localhost:29980"
 }

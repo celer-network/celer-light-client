@@ -169,9 +169,7 @@ export class CooperativeWithdrawProcessor {
   ): Promise<void> {
     const { values } = log;
     const channelId = ethers.utils.hexlify(values.channelId);
-    const { receiver } = values;
-    const { deposits } = values;
-    const { withdrawals } = values;
+    const { receiver, deposits, withdrawals } = values;
     // TODO(dominator008): Handle recipientChannelId
     const { db } = this;
     return db.transaction('rw', db.paymentChannels, async () => {

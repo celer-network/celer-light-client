@@ -1,4 +1,3 @@
-import Dexie from 'dexie';
 import { ethers } from 'ethers';
 import { BigNumber } from 'ethers/utils';
 
@@ -163,8 +162,6 @@ export class PaymentSettleRequestHandler {
     // Verify pending payment list
     const storedPendingPayIds = storedSimplexState.getPendingPayIds();
     const receivedPendingPayIds = receivedSimplexState.getPendingPayIds();
-    const storedPendingPayIdsList = storedPendingPayIds.getPayIdsList_asU8();
-    const receivedPendingPayIdsList = receivedPendingPayIds.getPayIdsList_asU8();
     const [
       removedPendingPayIds,
       addedPendingPayIds,

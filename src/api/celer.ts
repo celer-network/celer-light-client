@@ -12,19 +12,20 @@ import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 
 import { CryptoManager } from '../crypto/crypto_manager';
 import { Database } from '../data/database';
-import { HashLock } from '../data/hash_lock';
 import { HashLockUtils } from '../data/hash_lock_utils';
-import { CondPayReceiptHandler } from '../messaging/handlers/cond_pay_receipt_handler';
-import { CondPayRequestHandler } from '../messaging/handlers/cond_pay_request_handler';
-import { CondPayResponseHandler } from '../messaging/handlers/cond_pay_response_handler';
-import { PaymentSettleProofHandler } from '../messaging/handlers/payment_settle_proof_handler';
-import { PaymentSettleRequestHandler } from '../messaging/handlers/payment_settle_request_handler';
-import { PaymentSettleResponseHandler } from '../messaging/handlers/payment_settle_response_handler';
-import { RevealSecretAckHandler } from '../messaging/handlers/reveal_secret_ack_handler';
-import { RevealSecretHandler } from '../messaging/handlers/reveal_secret_handler';
+import { AuthAckHandler } from '../messaging/incoming/auth_ack_handler';
+import { CondPayReceiptHandler } from '../messaging/incoming/cond_pay_receipt_handler';
+import { CondPayRequestHandler } from '../messaging/incoming/cond_pay_request_handler';
+import { CondPayResponseHandler } from '../messaging/incoming/cond_pay_response_handler';
+import { PaymentSettleProofHandler } from '../messaging/incoming/payment_settle_proof_handler';
+import { PaymentSettleRequestHandler } from '../messaging/incoming/payment_settle_request_handler';
+import { PaymentSettleResponseHandler } from '../messaging/incoming/payment_settle_response_handler';
+import { RevealSecretAckHandler } from '../messaging/incoming/reveal_secret_ack_handler';
+import { RevealSecretHandler } from '../messaging/incoming/reveal_secret_handler';
 import { MessageManager } from '../messaging/message_manager';
-import { CondPayRequestSender } from '../messaging/senders/cond_pay_request_sender';
-import { PaymentSettleRequestSender } from '../messaging/senders/payment_settle_request_sender';
+import { AuthReqBuilder } from '../messaging/outgoing/auth_req_builder';
+import { CondPayRequestSender } from '../messaging/outgoing/cond_pay_request_sender';
+import { PaymentSettleRequestSender } from '../messaging/outgoing/payment_settle_request_sender';
 import { ApproveErc20Processor } from '../processors/approve_erc20_processor';
 import { CooperativeWithdrawProcessor } from '../processors/cooperative_withdraw_processor';
 import { DepositProcessor } from '../processors/deposit_processor';
@@ -40,11 +41,7 @@ import {
   TransferFunctionType,
   TransferFunctionTypeMap,
 } from '../protobufs/entity_pb';
-import {
-  AuthReq,
-  CelerMsg,
-  PaymentSettleReason,
-} from '../protobufs/message_pb';
+import { CelerMsg, PaymentSettleReason } from '../protobufs/message_pb';
 import * as typeUtils from '../utils/types';
 import { Config } from './config';
 import { ContractsInfo } from './contracts_info';
@@ -127,6 +124,10 @@ export class Celer {
     );
     this.cooperativeWithdrawProcessor = cooperativeWithdrawProcessor;
 
+    this.messageManager.setHandler(
+      CelerMsg.MessageCase.AUTH_ACK,
+      new AuthAckHandler(db, cryptoManager, contractsInfo, peerAddress)
+    );
     this.messageManager.setHandler(
       CelerMsg.MessageCase.COND_PAY_REQUEST,
       new CondPayRequestHandler(
@@ -243,24 +244,11 @@ export class Celer {
 
     const client = new Celer(provider, signer, contractsInfo, config);
     await client.messageManager.createSession();
-    const authRequest = new AuthReq();
-    const selfAddressBytes = ethers.utils.arrayify(
-      await client.cryptoManager.signer.getAddress()
+    const authReqBuilder = new AuthReqBuilder(client.db);
+    const authRequest = await authReqBuilder.build(
+      client.peerAddress,
+      client.cryptoManager
     );
-    const peerAddressBytes = ethers.utils.arrayify(client.peerAddress);
-    // Use Unix timestamp and pad to 8 bytes as required by the OSP
-    const timestamp = Math.floor(Date.now() / 1000);
-    const timestampBytes = ethers.utils.padZeros(
-      ethers.utils.arrayify(ethers.utils.bigNumberify(timestamp)),
-      8
-    );
-    const signatureBytes = ethers.utils.arrayify(
-      await client.cryptoManager.signHash(timestampBytes)
-    );
-    authRequest.setMyAddr(selfAddressBytes);
-    authRequest.setTimestamp(timestamp);
-    authRequest.setExpectPeer(peerAddressBytes);
-    authRequest.setMySig(signatureBytes);
     client.messageManager.subscribeMessages(authRequest);
     return client;
   }
@@ -270,7 +258,7 @@ export class Celer {
    *
    * @param tokenAddress The token address
    */
-  approveErc20(tokenAddress: string) {
+  approveErc20(tokenAddress: string): Promise<string> {
     return this.approveErc20Processor.approveIfNecessary(tokenAddress);
   }
 

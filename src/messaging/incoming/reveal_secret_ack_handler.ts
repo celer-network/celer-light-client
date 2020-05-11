@@ -5,7 +5,7 @@ import { Database } from '../../data/database';
 import { ConditionType } from '../../protobufs/entity_pb';
 import { CelerMsg, PaymentSettleReason } from '../../protobufs/message_pb';
 import * as typeUtils from '../../utils/types';
-import { PaymentSettleRequestSender } from '../senders/payment_settle_request_sender';
+import { PaymentSettleRequestSender } from '../outgoing/payment_settle_request_sender';
 
 export class RevealSecretAckHandler {
   private readonly db: Database;

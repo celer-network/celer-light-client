@@ -15,10 +15,14 @@ export function bytesToAddress(bytes: Uint8Array): string {
   return ethers.utils.getAddress(ethers.utils.hexlify(bytes));
 }
 
+export function numberToBytes(number: number): Uint8Array {
+  return ethers.utils.arrayify(ethers.utils.bigNumberify(number));
+}
+
 export function createTokenInfo(
   tokenType: TokenTypeMap[keyof TokenTypeMap],
   tokenAddress: string
-) {
+): TokenInfo {
   const tokenInfo = new TokenInfo();
   tokenInfo.setTokenType(tokenType);
   tokenInfo.setTokenAddress(
@@ -38,3 +42,5 @@ export function sortSignatureList(
   }
   return [peerSignature, selfSignature];
 }
+
+export const ZERO_BYTES = numberToBytes(0);

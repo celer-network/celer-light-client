@@ -198,7 +198,8 @@ export class OpenChannelProcessor {
       selfAddress,
       peerAddress,
       tokenType,
-      tokenAddress
+      tokenAddress,
+      this.contractsInfo.celerLedgerAddress
     );
     const zeroBytes = ethers.utils.arrayify(ethers.constants.Zero);
     const depositWithdrawal = new DepositWithdrawal(
@@ -251,7 +252,6 @@ export class OpenChannelProcessor {
       peerFrom = peerAddress;
       peerTo = selfAddress;
     }
-    const zeroBytes = ethers.utils.arrayify(ethers.utils.bigNumberify(0));
     const simplexState = new SimplexPaymentChannel();
     simplexState.setChannelId(ethers.utils.arrayify(channelId));
     simplexState.setPeerFrom(ethers.utils.arrayify(peerFrom));
@@ -262,13 +262,13 @@ export class OpenChannelProcessor {
     token.setTokenAddress(ethers.utils.arrayify(tokenAddress));
     const receiver = new AccountAmtPair();
     receiver.setAccount(ethers.utils.arrayify(peerTo));
-    receiver.setAmt(zeroBytes);
+    receiver.setAmt(typeUtils.ZERO_BYTES);
     transferToPeer.setToken(token);
     transferToPeer.setReceiver(receiver);
     simplexState.setTransferToPeer(transferToPeer);
     simplexState.setPendingPayIds(new PayIdList());
     simplexState.setLastPayResolveDeadline(0);
-    simplexState.setTotalPendingAmount(zeroBytes);
+    simplexState.setTotalPendingAmount(typeUtils.ZERO_BYTES);
     const simplexStateBytes = simplexState.serializeBinary();
     const selfSig = ethers.utils.arrayify(
       await this.cryptoManager.signHash(simplexStateBytes)

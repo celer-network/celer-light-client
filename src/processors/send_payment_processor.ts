@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers/utils';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 
-import { CondPayRequestSender } from '../messaging/senders/cond_pay_request_sender';
+import { CondPayRequestSender } from '../messaging/outgoing/cond_pay_request_sender';
 import {
   Condition,
   TokenTypeMap,

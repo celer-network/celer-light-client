@@ -19,8 +19,8 @@ export class Payment {
   readonly paymentId: string;
   readonly incomingChannelId: string;
   readonly outgoingChannelId: string;
-  readonly note: Uint8Array; // Any
-  private conditionalPay: Uint8Array; // ConditionalPay
+  private readonly note: Uint8Array; // Any
+  private readonly conditionalPay: Uint8Array; // ConditionalPay
 
   status: PaymentStatus;
   settlementAmount: Uint8Array; // BigNumber
@@ -33,7 +33,7 @@ export class Payment {
     note?: Any
   ) {
     this.paymentId = paymentId;
-    this.setConditionalPay(conditionalPay);
+    this.conditionalPay = conditionalPay.serializeBinary();
     this.status = PaymentStatus.INITIAL;
     this.incomingChannelId = incomingChannelId;
     this.outgoingChannelId = outgoingChannelId;
@@ -44,10 +44,6 @@ export class Payment {
 
   getConditionalPay(): ConditionalPay {
     return ConditionalPay.deserializeBinary(this.conditionalPay);
-  }
-
-  setConditionalPay(conditionalPay: ConditionalPay): void {
-    this.conditionalPay = conditionalPay.serializeBinary();
   }
 
   getNote(): Any {

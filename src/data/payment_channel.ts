@@ -20,6 +20,7 @@ export class PaymentChannel {
   readonly tokenType: TokenTypeMap[keyof TokenTypeMap];
   readonly tokenAddress: string;
 
+  ledgerAddress: string;
   depositWithdrawal: DepositWithdrawal;
   status: PaymentChannelStatus;
 
@@ -31,13 +32,15 @@ export class PaymentChannel {
     selfAddress: string,
     peerAddress: string,
     tokenType: TokenTypeMap[keyof TokenTypeMap],
-    tokenAddress: string
+    tokenAddress: string,
+    ledgerAddress: string
   ) {
     this.channelId = channelId;
     this.selfAddress = selfAddress;
     this.peerAddress = peerAddress;
     this.tokenType = tokenType;
     this.tokenAddress = tokenAddress;
+    this.ledgerAddress = ledgerAddress;
 
     this.status = PaymentChannelStatus.OPEN;
   }
@@ -172,14 +175,14 @@ export class PaymentChannel {
     }
 
     // Verify peer signature
-    const peerSignature = ethers.utils.splitSignature(
+    const peerFromSignature = ethers.utils.splitSignature(
       receivedSignedSimplexState.getSigOfPeerFrom_asU8()
     );
     if (
       !CryptoManager.isSignatureValid(
         peerAddress,
         receivedSimplexStateBytes,
-        peerSignature
+        peerFromSignature
       )
     ) {
       return {
@@ -190,8 +193,8 @@ export class PaymentChannel {
 
     // Verify peerFrom
     if (
-      ethers.utils.hexlify(receivedSimplexState.getPeerFrom_asU8()) !==
-      ethers.utils.hexlify(storedSimplexState.getPeerFrom_asU8())
+      receivedSimplexState.getPeerFrom_asB64() !==
+      storedSimplexState.getPeerFrom_asB64()
     ) {
       return {
         valid: false,
