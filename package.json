@@ -1,6 +1,6 @@
 {
   "name": "celer-light-client",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "Celer Light Client",
   "repository": "https://github.com/celer-network/celer-light-client",
   "author": {
@@ -70,7 +70,7 @@
     "typechain-target-ethers": "^1.0.4",
     "typedoc": "^0.17.6",
     "typedoc-thunder-theme": "^0.0.2",
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.2"
   },
   "dependencies": {
     "@improbable-eng/grpc-web": "^0.12.0",
