@@ -15,10 +15,10 @@ it('should open channel', async () => {
   expect(await provider.getSigner(2).unlock('')).toBeTruthy();
   const client = await Celer.create(connection, 2, contractsInfo, config);
   const channelId = await client.openPaymentChannel(
-      TokenType.ETH,
-      ethers.constants.AddressZero,
-      '1000000000000',
-      '1000000000000',
+    TokenType.ETH,
+    ethers.constants.AddressZero,
+    '1000000000000',
+    '1000000000000'
   );
   expect(channelId).toBeDefined();
   client.close();
